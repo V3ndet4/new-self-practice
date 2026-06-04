@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v1.4";
+const APP_VERSION = "v1.0";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -260,6 +260,16 @@ const GUIDE_SECTIONS = [
   ["Week Four: Creating and Rehearsing", "Chapter 13, pages 291-309", "Rehearse the thoughts, feelings, and actions of the person you intend to become."],
   ["Living the Practice", "Chapter 14, pages 310-320", "Use daily life as the place where inner practice becomes visible evidence."]
 ];
+
+const VIEW_LABELS = {
+  today: "Today",
+  journey: "Island Map",
+  lab: "Pattern Lab",
+  journal: "Archive",
+  growth: "Glow",
+  guide: "Book Guide",
+  settings: "Settings"
+};
 
 const DEFAULT_STATE = {
   version: 1,
@@ -561,34 +571,37 @@ function render() {
   }[activeView] || renderToday;
 
   app.innerHTML = `
-    <div class="layout">
-      <aside class="sidebar">
-        <div class="brand">
+    <div class="island-shell">
+      <header class="island-hud" aria-label="App status">
+        <button class="brand island-brand" type="button" data-view="journey">
           <div class="brand-mark">N</div>
           <div>
             <p class="brand-title">New Self Practice</p>
-            <p class="brand-subtitle">${APP_VERSION}</p>
+            <p class="brand-subtitle">${APP_VERSION} · ${escapeHTML(VIEW_LABELS[activeView] || "Practice")}</p>
           </div>
-        </div>
-        <nav class="nav" aria-label="Main navigation">
+        </button>
+        <nav class="compass-nav" aria-label="Island compass navigation">
           ${navButton("today", "Today")}
-          ${navButton("journey", "Journey")}
-          ${navButton("lab", "Pattern Lab")}
-          ${navButton("journal", "Journal")}
-          ${navButton("growth", "Growth")}
-          ${navButton("guide", "Book Guide")}
-          ${navButton("settings", "Settings")}
+          ${navButton("journey", "Map")}
+          ${navButton("lab", "Lab")}
+          ${navButton("journal", "Archive")}
+          ${navButton("growth", "Glow")}
+          ${navButton("guide", "Guide")}
+          ${navButton("settings", "Set")}
         </nav>
-        <p class="sidebar-note">Private by default. Reflections and progress remain on this device unless you export an encrypted backup.</p>
-      </aside>
-      <main class="main"><div class="page">${renderer()}</div></main>
+        <div class="island-hud-status">
+          <span class="pill gold">${escapeHTML(state.activeJourney.title)}</span>
+          <span class="pill">${state.activeJourney.foundationsComplete ? `Week ${state.activeJourney.currentWeek} · Day ${state.activeJourney.currentDay}` : "Foundations"}</span>
+        </div>
+      </header>
+      <main class="main island-main"><div class="page island-page">${renderer()}</div></main>
     </div>
   `;
   updateTimerDisplay();
 }
 
 function navButton(view, label) {
-  return `<button class="nav-button ${activeView === view ? "active" : ""}" type="button" data-view="${view}"><span>${ICONS[view]}</span><span>${label}</span></button>`;
+  return `<button class="nav-button compass-button ${activeView === view ? "active" : ""}" type="button" data-view="${view}"><span>${ICONS[view]}</span><span>${label}</span></button>`;
 }
 
 function guidedChoice(name, label, placeholder) {
@@ -625,14 +638,15 @@ function renderStart() {
 
   app.className = "app-shell";
   app.innerHTML = `
-    <main class="main">
-      <div class="page">
-        <section class="hero">
+    <main class="main island-main island-start">
+      <div class="page island-page">
+        <section class="hero island-landing">
           <p class="eyebrow">New Self Practice</p>
-          <h1>Practice one clear move at a time.</h1>
-          <p class="lead">An ordered private companion for learning the foundations, changing one familiar pattern, and turning daily meditation into observable real-life action.</p>
+          <h1>Begin at the shore. Walk toward the new self.</h1>
+          <p class="lead">An island-style practice journey for learning the foundations, changing one familiar pattern, and turning meditation into observable real-life action.</p>
           <div class="hero-proof">
             <span class="pill">One active journey</span>
+            <span class="pill">Island map progression</span>
             <span class="pill">One precise move each session</span>
             <span class="pill">Private on your device</span>
             <span class="pill">Progress preserved</span>
@@ -894,6 +908,64 @@ function renderWeeklyReview() {
   `;
 }
 
+function getIslandLocations(journey) {
+  const foundationLocations = FOUNDATION_CONTENT.map((lesson, index) => ({
+    id: lesson.id,
+    label: lesson.label,
+    title: [
+      "The Shore",
+      "Field of Possibility",
+      "Environment Cave",
+      "Body Tide",
+      "Time Dunes",
+      "Survival Storm",
+      "Three-Brain Bridge",
+      "Gap Lagoon",
+      "Meditation Cove",
+      "Preparation Camp"
+    ][index],
+    subtitle: lesson.title,
+    status: journey.foundationRecords.some((record) => record.id === lesson.id)
+      ? "complete"
+      : !journey.foundationsComplete && index === journey.currentFoundationIndex
+        ? "current"
+        : "locked",
+    type: "foundation"
+  }));
+  const weekLocations = WEEK_CONTENT.map((week) => ({
+    id: `week-${week.week}`,
+    label: `Week ${week.week}`,
+    title: ["Induction Bay", "Pruning Garden", "Redirect Ridge", "New Self Horizon"][week.week - 1],
+    subtitle: week.shortTitle,
+    status: !journey.foundationsComplete
+      ? "locked"
+      : week.week < journey.currentWeek
+        ? "complete"
+        : week.week === journey.currentWeek
+          ? "current"
+          : "locked",
+    type: "practice"
+  }));
+  return [...foundationLocations, ...weekLocations];
+}
+
+function renderIslandMap(journey) {
+  return `
+    <section class="island-map" aria-label="Island journey map">
+      ${getIslandLocations(journey).map((location, index) => `
+        <article class="island-location ${location.status} ${location.type}" style="--i:${index}">
+          <div class="location-orb">${location.status === "complete" ? "✓" : index + 1}</div>
+          <div>
+            <span class="small">${escapeHTML(location.label)}</span>
+            <h3>${escapeHTML(location.title)}</h3>
+            <p>${escapeHTML(location.subtitle)}</p>
+          </div>
+        </article>
+      `).join("")}
+    </section>
+  `;
+}
+
 function renderJourney() {
   const journey = state.activeJourney;
   const completed = getRecords(journey).length;
@@ -910,6 +982,8 @@ function renderJourney() {
     </header>
 
     ${renderMomentumStrip()}
+
+    ${renderIslandMap(journey)}
 
     <section class="panel">
       <p class="eyebrow">Required Foundations</p>

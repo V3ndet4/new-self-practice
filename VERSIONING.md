@@ -2,9 +2,9 @@
 
 New Self Practice uses product releases that increase in increments of `0.1`.
 
-- Current release: `v1.4`
-- Next completed release: `v1.5`
-- Following completed release: `v1.6`
+- Current release: `v1.0`
+- Next completed release: `v1.1`
+- Following completed release: `v1.2`
 
 For every completed release:
 

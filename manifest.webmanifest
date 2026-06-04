@@ -1,7 +1,7 @@
 {
   "name": "New Self Practice",
   "short_name": "New Self",
-  "description": "An ordered private companion for turning meditation, reflection, and precise daily action into visible change.",
+  "description": "An island-style private practice journey for turning meditation, reflection, and precise daily action into visible change.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#34364c",

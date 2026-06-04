@@ -71,7 +71,7 @@ try {
   await send("Page.enable");
   await send("Page.navigate", { url: "http://127.0.0.1:4174/" });
   await wait(800);
-  assert(await evaluate("document.querySelector('h1')?.textContent") === "Practice one clear move at a time.", "Start screen did not render.");
+  assert(await evaluate("document.querySelector('h1')?.textContent") === "Begin at the shore. Walk toward the new self.", "Start screen did not render.");
 
   await evaluate(`(() => {
     const values = {

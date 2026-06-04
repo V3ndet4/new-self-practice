@@ -2,7 +2,7 @@
 
 A private, local-first companion for practicing the four-week process in *Breaking the Habit of Being Yourself*.
 
-Current release: `v1.4`
+Current release: `v1.0`
 
 ## Product rules
 
@@ -18,12 +18,13 @@ Current release: `v1.4`
 - Sunset glow, return streaks, milestones, and practice sparks make consistency visible without weakening the required sequence.
 - Pattern Lab supports Review the Moment and Rehearse the Moment with personalized branching choices.
 - An optional deterministic private reflection coach specializes observations from local Pattern Lab sessions without sending data anywhere.
+- The v1.0 Island Journey UI replaces the dashboard/sidebar layout with a map-first practice world and sticky compass navigation.
 
 The app uses original companion exercises and page references. It does not reproduce the book's long-form text or guided scripts.
 
 ## Versioning and publishing
 
-- Completed releases increase by `0.1`: `v1.0`, `v1.1`, `v1.2`, and so on.
+- This Island Journey setup starts at `v1.0`; completed releases increase by `0.1`: `v1.1`, `v1.2`, and so on.
 - Each completed release is committed and pushed to `main`.
 - GitHub Actions automatically publishes `main` to the public GitHub Pages URL.
 - GitHub deployment verifies JavaScript syntax and version consistency before publishing.
