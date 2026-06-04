@@ -22,5 +22,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify release
+        run: |
+          node --check app.js
+          node --check service-worker.js
+          node version-check.mjs
+
       - name: Publish main to the Pages branch
         run: git push origin HEAD:gh-pages --force

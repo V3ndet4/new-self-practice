@@ -1,9 +1,9 @@
-const CACHE_NAME = "new-self-practice-v2-foundations-sunset";
+const CACHE_NAME = "new-self-practice-v1.0-action-momentum";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=0.2.0",
-  "./app.js?v=0.2.0",
+  "./styles.css?v=1.0",
+  "./app.js?v=1.0",
   "./manifest.webmanifest",
   "./icon.svg",
   "./assets/sunset-beach.png"

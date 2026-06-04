@@ -71,7 +71,7 @@ try {
   await send("Page.enable");
   await send("Page.navigate", { url: "http://127.0.0.1:4174/" });
   await wait(800);
-  assert(await evaluate("document.querySelector('h1')?.textContent") === "Practice becoming someone new.", "Start screen did not render.");
+  assert(await evaluate("document.querySelector('h1')?.textContent") === "Practice one clear move at a time.", "Start screen did not render.");
 
   await evaluate(`(() => {
     const values = {
@@ -106,8 +106,19 @@ try {
     await evaluate(`(() => {
       const form = document.querySelector("#foundationForm");
       form.elements.reflection.value = "Foundation reflection ${lesson}";
-      form.elements.application.value = "Foundation application ${lesson}";
       form.elements.reviewed.checked = true;
+      form.elements.foundationActionCue.value = "when the old pattern appears";
+      form.elements.foundationActionResponse.value = "pause and choose one grounded action";
+      form.elements.foundationActionMinimum.value = "pause for three seconds";
+      form.elements.foundationActionProof.value = "write one sentence";
+      form.requestSubmit();
+    })()`);
+    await wait(80);
+    await evaluate(`(() => {
+      const form = document.querySelector("#actionFollowUpForm");
+      if (!form) return;
+      form.elements.outcome.value = "minimum";
+      form.elements.note.value = "I paused for three seconds.";
       form.requestSubmit();
     })()`);
     await wait(80);
@@ -116,10 +127,16 @@ try {
   const afterFoundations = await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney");
   assert(afterFoundations.foundationsComplete === true, "Foundations did not complete.");
   assert(afterFoundations.foundationRecords.length === 10, "Foundation reflections were not preserved.");
+  assert(afterFoundations.foundationRecords.every((record) => record.actionContract?.proof), "Foundation action contracts were not preserved.");
+  assert(afterFoundations.foundationRecords.every((record) => record.actionFollowUp?.outcome), "Foundation One Move follow-through was not preserved.");
   assert(await evaluate("document.querySelector('h1')?.textContent") === "Prepare the space", "Week One did not unlock after Chapter 9.");
 
   await evaluate(`(() => {
     document.querySelector("#reflection").value = "This should remain blocked.";
+    document.querySelector("#dailyActionCue").value = "feedback";
+    document.querySelector("#dailyActionResponse").value = "pause and listen";
+    document.querySelector("#dailyActionMinimum").value = "take one breath";
+    document.querySelector("#dailyActionProof").value = "write one sentence";
     document.querySelector("#dailyPracticeForm").requestSubmit();
   })()`);
   await wait(100);
@@ -129,18 +146,30 @@ try {
     await evaluate(`(() => {
       document.querySelector("#declaration").value = "reacting automatically";
       document.querySelector("#reflection").value = "Reflection for day ${day}";
-      document.querySelector("#trigger").value = "feedback";
-      document.querySelector("#newResponse").value = "pause and listen";
+      document.querySelector("#dailyActionCue").value = "feedback";
+      document.querySelector("#dailyActionResponse").value = "pause and listen";
+      document.querySelector("#dailyActionMinimum").value = "take one breath";
+      document.querySelector("#dailyActionProof").value = "write one sentence";
       document.querySelector("#evidence").value = "I noticed a choice.";
       document.querySelector("[data-action='timer-start']").click();
       document.querySelector("[data-action='timer-finish']").click();
       document.querySelector("#dailyPracticeForm").requestSubmit();
     })()`);
     await wait(120);
+    await evaluate(`(() => {
+      const form = document.querySelector("#actionFollowUpForm");
+      if (!form) return;
+      form.elements.outcome.value = "completed";
+      form.elements.note.value = "I chose the new response.";
+      form.requestSubmit();
+    })()`);
+    await wait(80);
   }
 
   const afterWeek = await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney");
   assert(afterWeek.records.length === 7, "Seven daily records were not preserved.");
+  assert(afterWeek.records.every((record) => record.actionContract?.proof), "Daily One Move contracts were not preserved.");
+  assert(afterWeek.records.every((record) => record.actionFollowUp?.outcome), "Daily One Move follow-through was not preserved.");
   assert(afterWeek.needsReview === true, "Weekly review did not unlock after seven days.");
 
   await evaluate(`(() => {
@@ -174,7 +203,7 @@ try {
   assert(afterJump.currentWeek === 4 && afterJump.currentDay === 7, "Flexible Progression did not allow an explicit future-day jump.");
   assert(exceptions.length === 0, `Browser exceptions: ${exceptions.join("; ")}`);
 
-  console.log("SMOKE_TEST_OK: guided setup, ordered Foundations, meditation gate, 7-day sequence, weekly repeat, preservation, and Settings override/jump");
+  console.log("SMOKE_TEST_OK: guided setup, ordered Foundations, precise One Moves, enforced follow-through, meditation gate, 7-day sequence, weekly repeat, preservation, and Settings override/jump");
 } finally {
   socket.close();
   edge.kill();

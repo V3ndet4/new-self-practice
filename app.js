@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v0.2.0";
+const APP_VERSION = "v1.0";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -127,6 +127,24 @@ const GUIDED_OPTIONS = {
   futureResponse: ["Pause and respond calmly", "Stay present with uncertainty", "Listen before defending", "Choose a grounded next action", "Speak honestly and respectfully", "Let the feeling pass without obeying it"],
   firstDeclaration: ["expecting the worst", "reacting defensively", "believing I am not enough", "avoiding discomfort", "trying to control every outcome", "repeating the same emotional reaction"]
 };
+
+const PRACTICE_SPARKS = [
+  "Make the new response visible in one small moment.",
+  "Catch the pattern one step earlier than usual.",
+  "Practice the smallest version instead of waiting for perfect conditions.",
+  "Use one trigger as a reminder to become conscious.",
+  "Pause long enough to choose instead of repeating.",
+  "Let today's proof be simple, specific, and honest.",
+  "Notice what changes when you stop rehearsing the familiar outcome."
+];
+
+const MOMENTUM_MILESTONES = [
+  { points: 100, title: "First Light", note: "You began turning insight into repeated action." },
+  { points: 300, title: "Steady Horizon", note: "Your return to practice is becoming visible." },
+  { points: 700, title: "New Response", note: "You are collecting evidence beyond reflection." },
+  { points: 1200, title: "Lived Practice", note: "Your practice is reaching daily behavior." },
+  { points: 2000, title: "New Self in Motion", note: "You have built a substantial body of evidence." }
+];
 
 const WEEK_CONTENT = [
   {
@@ -349,6 +367,156 @@ function average(values) {
   return Math.round((values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length) * 10) / 10;
 }
 
+function getAllJourneyRecords() {
+  return [state.activeJourney, ...state.archives].filter(Boolean).flatMap((journey) => getRecords(journey));
+}
+
+function getAllFoundationRecords() {
+  return [state.activeJourney, ...state.archives].filter(Boolean).flatMap((journey) => journey.foundationRecords || []);
+}
+
+function calculateStreak() {
+  const dates = [...getAllJourneyRecords(), ...getAllFoundationRecords()]
+    .map((record) => String(record.completedAt || "").slice(0, 10))
+    .filter(Boolean);
+  const unique = new Set(dates);
+  if (!unique.size) return 0;
+  const cursor = new Date();
+  const today = cursor.toISOString().slice(0, 10);
+  if (!unique.has(today)) cursor.setDate(cursor.getDate() - 1);
+  let streak = 0;
+  while (unique.has(cursor.toISOString().slice(0, 10))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+function getMomentum() {
+  const records = getAllJourneyRecords();
+  const foundations = getAllFoundationRecords();
+  const evidence = records.filter((record) => record.evidence).length;
+  const actionProofs = records.filter((record) => record.actionContract?.proof).length
+    + foundations.filter((record) => record.actionContract?.proof).length;
+  const followThrough = [...records, ...foundations].filter((record) => ["completed", "minimum"].includes(record.actionFollowUp?.outcome)).length;
+  const points = foundations.length * 20 + records.length * 50 + evidence * 20 + actionProofs * 10 + followThrough * 25;
+  const earned = MOMENTUM_MILESTONES.filter((milestone) => points >= milestone.points);
+  const next = MOMENTUM_MILESTONES.find((milestone) => points < milestone.points) || null;
+  return { points, streak: calculateStreak(), evidence, actionProofs, followThrough, earned, next };
+}
+
+function renderMomentumStrip() {
+  const momentum = getMomentum();
+  const nextText = momentum.next
+    ? `${momentum.next.points - momentum.points} glow until ${momentum.next.title}`
+    : "All current milestones reached";
+  return `
+    <section class="momentum-strip" aria-label="Practice momentum">
+      <article><span class="small">Sunset glow</span><strong>${momentum.points}</strong><span>${escapeHTML(nextText)}</span></article>
+      <article><span class="small">Return streak</span><strong>${momentum.streak}</strong><span>consecutive practice days</span></article>
+      <article><span class="small">Action loops closed</span><strong>${momentum.followThrough}/${momentum.actionProofs}</strong><span>completed or minimum version practiced</span></article>
+    </section>
+  `;
+}
+
+function practiceSpark(seed = 0) {
+  return PRACTICE_SPARKS[Math.abs(Number(seed) || 0) % PRACTICE_SPARKS.length];
+}
+
+function renderActionContract(prefix, suggestedAction, existing = {}) {
+  return `
+    <div class="action-contract">
+      <div class="action-contract-heading">
+        <div><p class="eyebrow">Required · One Move</p><h2>Make the insight observable.</h2></div>
+        <span class="pill gold">Specific beats ambitious</span>
+      </div>
+      <div class="grid two">
+        <div class="field">
+          <label for="${prefix}Cue">When this happens...</label>
+          <input id="${prefix}Cue" name="${prefix}Cue" required maxlength="180" value="${escapeHTML(existing.cue || "")}" placeholder="Example: when I notice criticism or tension">
+        </div>
+        <div class="field">
+          <label for="${prefix}Response">I will do this observable action...</label>
+          <input id="${prefix}Response" name="${prefix}Response" required maxlength="220" value="${escapeHTML(existing.response || "")}" placeholder="${escapeHTML(suggestedAction)}">
+        </div>
+        <div class="field">
+          <label for="${prefix}Minimum">Smallest version I will still count...</label>
+          <input id="${prefix}Minimum" name="${prefix}Minimum" required maxlength="180" value="${escapeHTML(existing.minimum || "")}" placeholder="Example: pause for three seconds before responding">
+        </div>
+        <div class="field">
+          <label for="${prefix}Proof">How I will know I did it...</label>
+          <input id="${prefix}Proof" name="${prefix}Proof" required maxlength="180" value="${escapeHTML(existing.proof || "")}" placeholder="Example: write one sentence about what I chose">
+        </div>
+      </div>
+      <div class="mission-preview">
+        <span class="small">Today's mission</span>
+        <p data-mission-preview="${prefix}">Complete the four fields to create a precise action.</p>
+      </div>
+    </div>
+  `;
+}
+
+function readActionContract(data, prefix) {
+  return {
+    cue: String(data.get(`${prefix}Cue`) || "").trim(),
+    response: String(data.get(`${prefix}Response`) || "").trim(),
+    minimum: String(data.get(`${prefix}Minimum`) || "").trim(),
+    proof: String(data.get(`${prefix}Proof`) || "").trim()
+  };
+}
+
+function renderActionContractSummary(contract) {
+  if (!contract?.cue || !contract?.response) return "";
+  return `
+    <div class="action-summary">
+      <span class="small">One Move</span>
+      <p><strong>When</strong> ${escapeHTML(contract.cue)}, <strong>I will</strong> ${escapeHTML(contract.response)}.</p>
+      <p class="small">Minimum: ${escapeHTML(contract.minimum)} · Proof: ${escapeHTML(contract.proof)}</p>
+    </div>
+  `;
+}
+
+function getPendingActionRecord(journey = state.activeJourney) {
+  if (!journey) return null;
+  return [...(journey.foundationRecords || []), ...getRecords(journey)]
+    .filter((record) => record.actionContract?.cue && !record.actionFollowUp)
+    .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt))[0] || null;
+}
+
+function renderActionFollowUp() {
+  const record = getPendingActionRecord();
+  if (!record) return "";
+  return `
+    <section class="panel follow-up-panel">
+      <div class="action-contract-heading">
+        <div><p class="eyebrow">Close the loop</p><h2>What happened with your earlier One Move?</h2></div>
+        <span class="pill gold">+25 glow for follow-through</span>
+      </div>
+      ${renderActionContractSummary(record.actionContract)}
+      <p class="small">Record an honest outcome before completing the next lesson or practice day. Adjusting the action is allowed; silently skipping it is not.</p>
+      <form id="actionFollowUpForm" class="form" style="margin-top:16px;">
+        <input type="hidden" name="recordId" value="${escapeHTML(record.id)}">
+        <div class="grid two">
+          <div class="field">
+            <label for="followUpOutcome">What happened?</label>
+            <select id="followUpOutcome" name="outcome" required>
+              <option value="">Choose an honest result</option>
+              <option value="completed">I completed the full action</option>
+              <option value="minimum">I practiced the minimum version</option>
+              <option value="adjust">I did not do it; I need to adjust it</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="followUpNote">What did you learn?</label>
+            <input id="followUpNote" name="note" required maxlength="220" placeholder="One honest sentence is enough">
+          </div>
+        </div>
+        <button class="button secondary" type="submit">Record follow-through</button>
+      </form>
+    </section>
+  `;
+}
+
 function showToast(message) {
   document.querySelector(".toast")?.remove();
   const toast = document.createElement("div");
@@ -442,11 +610,11 @@ function renderStart() {
       <div class="page">
         <section class="hero">
           <p class="eyebrow">New Self Practice</p>
-          <h1>Practice becoming someone new.</h1>
-          <p class="lead">A private four-week companion for changing one familiar habit or identity pattern through daily meditation, honest declaration, and real-life rehearsal.</p>
+          <h1>Practice one clear move at a time.</h1>
+          <p class="lead">An ordered private companion for learning the foundations, changing one familiar pattern, and turning daily meditation into observable real-life action.</p>
           <div class="hero-proof">
             <span class="pill">One active journey</span>
-            <span class="pill">Seven days per week</span>
+            <span class="pill">One precise move each session</span>
             <span class="pill">Private on your device</span>
             <span class="pill">Progress preserved</span>
           </div>
@@ -528,6 +696,14 @@ function renderFoundation() {
       </div>
     </header>
 
+    ${renderMomentumStrip()}
+    ${renderActionFollowUp()}
+
+    <section class="practice-spark">
+      <span class="small">Practice spark</span>
+      <strong>${escapeHTML(practiceSpark(index))}</strong>
+    </section>
+
     <section class="panel foundation-lesson">
       <div class="meta-row"><span class="pill gold">${escapeHTML(lesson.page)}</span><span class="pill">Required before Week One</span></div>
       <h2 style="margin-top:14px;">Why this comes first</h2>
@@ -537,20 +713,20 @@ function renderFoundation() {
 
     <form id="foundationForm" class="form">
       <section class="panel">
-        <p class="eyebrow">Required reflection</p>
+        <p class="eyebrow">Step 1 of 2 · Understand</p>
         <h2>${escapeHTML(lesson.prompt)}</h2>
         <div class="field">
           <label for="foundationReflection">What stood out?</label>
           <textarea id="foundationReflection" name="reflection" required placeholder="Connect the chapter to the pattern you chose for this journey."></textarea>
         </div>
-        <div class="field">
-          <label for="foundationApplication">Apply it today</label>
-          <textarea id="foundationApplication" name="application" required placeholder="${escapeHTML(lesson.action)}"></textarea>
-        </div>
         <label class="check-row">
           <input type="checkbox" name="reviewed" required>
           I read or reviewed the referenced section and completed this reflection honestly.
         </label>
+      </section>
+      <section class="panel">
+        <p class="eyebrow">Step 2 of 2 · Act</p>
+        ${renderActionContract("foundationAction", lesson.action)}
       </section>
       <button class="button gold" type="submit">${index === FOUNDATION_CONTENT.length - 1 ? "Complete Foundations and Unlock Week One" : `Complete and Continue to ${FOUNDATION_CONTENT[index + 1].label}`}</button>
     </form>
@@ -582,6 +758,21 @@ function renderToday() {
       </div>
     </header>
 
+    ${renderMomentumStrip()}
+    ${renderActionFollowUp()}
+
+    <section class="practice-spark">
+      <span class="small">Practice spark</span>
+      <strong>${escapeHTML(practiceSpark(journey.currentWeek * 10 + journey.currentDay))}</strong>
+    </section>
+
+    <section class="focus-flow" aria-label="Today's practice flow">
+      <span><strong>1</strong> Declare</span>
+      <span><strong>2</strong> Meditate</span>
+      <span><strong>3</strong> Reflect</span>
+      <span><strong>4</strong> Choose one move</span>
+    </section>
+
     <section class="panel">
       <div class="meta-row"><span class="pill gold">${escapeHTML(week.shortTitle)}</span><span class="pill">${escapeHTML(week.page)}</span></div>
       <h2 style="margin-top:12px;">Why this practice matters</h2>
@@ -590,7 +781,7 @@ function renderToday() {
 
     <form id="dailyPracticeForm" class="form">
       <section class="panel">
-        <p class="eyebrow">Required · Change Declaration</p>
+        <p class="eyebrow">Step 1 of 4 · Change Declaration</p>
         <h2>Name what you are ready to change today.</h2>
         <div class="field">
           <label for="declaration">Complete the declaration</label>
@@ -605,7 +796,7 @@ function renderToday() {
       </section>
 
       <section class="panel">
-        <p class="eyebrow">Required · Meditation</p>
+        <p class="eyebrow">Step 2 of 4 · Meditation</p>
         <h2>${state.settings.duration}-minute ${state.settings.spokenGuidance ? "guided" : "silent"} practice</h2>
         <div class="grid two">
           <div>
@@ -627,7 +818,7 @@ function renderToday() {
       </section>
 
       <section class="panel">
-        <p class="eyebrow">Required · Reflection</p>
+        <p class="eyebrow">Step 3 of 4 · Reflection</p>
         <h2>${escapeHTML(daily[1])}</h2>
         <div class="field"><label for="reflection">Short reflection</label><textarea id="reflection" name="reflection" required placeholder="Write what you noticed without judging it."></textarea></div>
         <div class="field">
@@ -637,16 +828,12 @@ function renderToday() {
       </section>
 
       <section class="panel">
-        <p class="eyebrow">Optional · Real-life evidence</p>
-        <h2>${escapeHTML(daily[2])}</h2>
-        <div class="grid two">
-          <div class="field"><label for="trigger">Trigger noticed</label><textarea id="trigger" name="trigger" placeholder="What activated the familiar pattern?"></textarea></div>
-          <div class="field"><label for="newResponse">New-self response</label><textarea id="newResponse" name="newResponse" placeholder="${escapeHTML(journey.futureResponse)}"></textarea></div>
-        </div>
-        <div class="field"><label for="evidence">Evidence of change</label><textarea id="evidence" name="evidence" placeholder="Where did you interrupt, redirect, or choose differently?"></textarea></div>
+        <p class="eyebrow">Step 4 of 4 · Act</p>
+        ${renderActionContract("dailyAction", daily[2], { cue: journey.triggers, response: journey.futureResponse })}
+        <div class="field" style="margin-top:18px;"><label for="evidence">Optional proof if you already tried it</label><textarea id="evidence" name="evidence" placeholder="What happened when you chose differently?"></textarea></div>
       </section>
 
-      <button class="button gold" type="submit">Complete Day ${journey.currentDay}</button>
+      <button class="button gold completion-button" type="submit">Complete Day ${journey.currentDay} and add 60 glow</button>
     </form>
   `;
 }
@@ -670,6 +857,8 @@ function renderWeeklyReview() {
       </div>
       <div class="card stat"><span class="small">Average intensity shift</span><strong>${startAverage} → ${endAverage}</strong><span class="small">${evidenceCount} evidence entries</span></div>
     </header>
+    ${renderMomentumStrip()}
+    ${renderActionFollowUp()}
     <section class="panel">
       <div class="meta-row"><span class="pill gold">${escapeHTML(week.title)}</span><span class="pill">${records.length}/7 days complete</span></div>
       <form id="weeklyReviewForm" class="form" style="margin-top:18px;">
@@ -700,6 +889,8 @@ function renderJourney() {
       </div>
       <div class="card stat"><span class="small">Minimum journey progress</span><strong>${progress}%</strong><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div></div>
     </header>
+
+    ${renderMomentumStrip()}
 
     <section class="panel">
       <p class="eyebrow">Required Foundations</p>
@@ -807,6 +998,8 @@ function renderJournal() {
           <h3>${escapeHTML(record.title)}</h3>
           <p><strong>Reflection:</strong> ${escapeHTML(record.reflection)}</p>
           <p><strong>Application:</strong> ${escapeHTML(record.application)}</p>
+          ${renderActionContractSummary(record.actionContract)}
+          ${record.actionFollowUp ? `<p class="small"><strong>Follow-through:</strong> ${escapeHTML(record.actionFollowUp.outcome)} · ${escapeHTML(record.actionFollowUp.note)}</p>` : ""}
         </article>
       `).join("") : `<div class="empty">Foundation reflections appear here as you complete them.</div>`}
     </section>
@@ -839,6 +1032,8 @@ function renderJournalEntry(journey, record) {
       ${record.trigger ? `<p><strong>Trigger:</strong> ${escapeHTML(record.trigger)}</p>` : ""}
       ${record.newResponse ? `<p><strong>New-self response:</strong> ${escapeHTML(record.newResponse)}</p>` : ""}
       ${record.evidence ? `<p><strong>Evidence:</strong> ${escapeHTML(record.evidence)}</p>` : ""}
+      ${renderActionContractSummary(record.actionContract)}
+      ${record.actionFollowUp ? `<p class="small"><strong>Follow-through:</strong> ${escapeHTML(record.actionFollowUp.outcome)} · ${escapeHTML(record.actionFollowUp.note)}</p>` : ""}
       <p class="small">Pattern intensity: ${record.intensityBefore}/10 before → ${record.intensityAfter}/10 after · ${record.duration} minute practice</p>
     </article>
   `;
@@ -852,12 +1047,27 @@ function renderGrowth() {
   const averageBefore = average(records.map((item) => item.intensityBefore));
   const averageAfter = average(records.map((item) => item.intensityAfter));
   const cycles = cycleStats(state.activeJourney);
+  const momentum = getMomentum();
 
   return `
     <header class="topbar">
       <div><p class="eyebrow">Growth comparisons</p><h1>Measure practice, not perfection.</h1><p class="lead">Compare recurring declarations, intensity shifts, and evidence across cycles without erasing earlier work.</p></div>
       <div class="card stat"><span class="small">Average pattern intensity</span><strong>${averageBefore} → ${averageAfter}</strong><span class="small">before and after practice</span></div>
     </header>
+    ${renderMomentumStrip()}
+    <section class="panel">
+      <p class="eyebrow">Sunset milestones</p>
+      <h2>Let consistency reveal the change.</h2>
+      <div class="milestone-grid">
+        ${MOMENTUM_MILESTONES.map((milestone) => `
+          <article class="milestone-card ${momentum.points >= milestone.points ? "earned" : ""}">
+            <span class="pill ${momentum.points >= milestone.points ? "gold" : ""}">${momentum.points >= milestone.points ? "Reached" : `${milestone.points} glow`}</span>
+            <h3>${escapeHTML(milestone.title)}</h3>
+            <p>${escapeHTML(milestone.note)}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
     <section class="grid three">
       <div class="card stat"><span class="small">Completed days</span><strong>${records.length}</strong><span class="small">across all journeys</span></div>
       <div class="card stat"><span class="small">Evidence entries</span><strong>${evidenceCount}</strong><span class="small">real-life changed responses</span></div>
@@ -1117,16 +1327,19 @@ function handlePreparation(form) {
 }
 
 function handleFoundation(form) {
+  if (getPendingActionRecord()) throw new Error("Close the previous One Move before completing this Foundation.");
   const journey = state.activeJourney;
   const index = Math.min(FOUNDATION_CONTENT.length - 1, journey.currentFoundationIndex || 0);
   const lesson = FOUNDATION_CONTENT[index];
   const data = new FormData(form);
+  const actionContract = readActionContract(data, "foundationAction");
   journey.foundationRecords.push({
     id: lesson.id,
     label: lesson.label,
     title: lesson.title,
     reflection: String(data.get("reflection") || "").trim(),
-    application: String(data.get("application") || "").trim(),
+    application: actionContract.response,
+    actionContract,
     completedAt: new Date().toISOString()
   });
   if (index >= FOUNDATION_CONTENT.length - 1) {
@@ -1137,10 +1350,27 @@ function handleFoundation(form) {
   }
   saveState();
   render();
-  showToast(journey.foundationsComplete ? "Foundations complete. Week One induction is now unlocked." : `${FOUNDATION_CONTENT[index + 1].label} is ready.`);
+  showToast(journey.foundationsComplete ? "Foundations complete. Week One unlocked. +30 glow." : `${FOUNDATION_CONTENT[index + 1].label} is ready. +30 glow.`);
+}
+
+function handleActionFollowUp(form) {
+  const data = new FormData(form);
+  const recordId = String(data.get("recordId") || "");
+  const outcome = String(data.get("outcome") || "");
+  const record = [...(state.activeJourney.foundationRecords || []), ...getRecords(state.activeJourney)].find((item) => item.id === recordId);
+  if (!record) throw new Error("That One Move could not be found.");
+  record.actionFollowUp = {
+    outcome,
+    note: String(data.get("note") || "").trim(),
+    completedAt: new Date().toISOString()
+  };
+  saveState();
+  render();
+  showToast(["completed", "minimum"].includes(outcome) ? "Follow-through recorded. +25 glow." : "Action adjusted honestly. Use the next One Move to make it smaller.");
 }
 
 function handleDailyPractice(form) {
+  if (getPendingActionRecord()) throw new Error("Close the previous One Move before completing today's practice.");
   if (!practiceSession.complete) {
     showToast("Complete the meditation before finishing this day.");
     return;
@@ -1149,6 +1379,7 @@ function handleDailyPractice(form) {
   const data = new FormData(form);
   const declaration = String(data.get("declaration") || "").trim();
   const reflection = String(data.get("reflection") || "").trim();
+  const actionContract = readActionContract(data, "dailyAction");
   if (!declaration || !reflection) {
     showToast("A Change Declaration and short reflection are required.");
     return;
@@ -1162,8 +1393,9 @@ function handleDailyPractice(form) {
     dayTitle: currentDayContent()[0],
     declaration,
     reflection,
-    trigger: String(data.get("trigger") || "").trim(),
-    newResponse: String(data.get("newResponse") || "").trim(),
+    trigger: actionContract.cue,
+    newResponse: actionContract.response,
+    actionContract,
     evidence: String(data.get("evidence") || "").trim(),
     intensityBefore: Number(data.get("intensityBefore") || 5),
     intensityAfter: Number(data.get("intensityAfter") || 5),
@@ -1180,10 +1412,12 @@ function handleDailyPractice(form) {
   saveState();
   resetPracticeSession();
   render();
-  showToast(journey.needsReview ? "Seven days complete. Your weekly review is ready." : "Day complete. The next practice is unlocked.");
+  const glow = record.evidence ? 80 : 60;
+  showToast(journey.needsReview ? `Seven days complete. Weekly review ready. +${glow} glow.` : `Day complete. Your One Move is ready. +${glow} glow.`);
 }
 
 function handleWeeklyReview(form, submitter) {
+  if (getPendingActionRecord()) throw new Error("Close the final One Move before completing the weekly review.");
   const journey = state.activeJourney;
   const data = new FormData(form);
   const choice = submitter?.value || data.get("choice");
@@ -1402,6 +1636,7 @@ app.addEventListener("submit", async (event) => {
   try {
     if (form.id === "preparationForm") handlePreparation(form);
     if (form.id === "foundationForm") handleFoundation(form);
+    if (form.id === "actionFollowUpForm") handleActionFollowUp(form);
     if (form.id === "dailyPracticeForm") handleDailyPractice(form);
     if (form.id === "weeklyReviewForm") handleWeeklyReview(form, event.submitter);
     if (form.id === "settingsForm") handleSettings(form);
@@ -1483,7 +1718,22 @@ app.addEventListener("input", (event) => {
   if (event.target.id === "intensityAfter") {
     document.getElementById("afterValue").textContent = event.target.value;
   }
+  if (/^(foundationAction|dailyAction)(Cue|Response|Minimum|Proof)$/.test(event.target.id)) {
+    updateMissionPreview(event.target.id.startsWith("foundationAction") ? "foundationAction" : "dailyAction");
+  }
 });
+
+function updateMissionPreview(prefix) {
+  const cue = document.getElementById(`${prefix}Cue`)?.value.trim();
+  const response = document.getElementById(`${prefix}Response`)?.value.trim();
+  const minimum = document.getElementById(`${prefix}Minimum`)?.value.trim();
+  const proof = document.getElementById(`${prefix}Proof`)?.value.trim();
+  const preview = document.querySelector(`[data-mission-preview="${prefix}"]`);
+  if (!preview) return;
+  preview.textContent = cue && response && minimum && proof
+    ? `When ${cue}, I will ${response}. The minimum is ${minimum}. I will count it when ${proof}.`
+    : "Complete the four fields to create a precise action.";
+}
 
 function renderArchivedOnly(journey) {
   if (!journey) return renderStart();

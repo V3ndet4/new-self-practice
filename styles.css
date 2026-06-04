@@ -154,6 +154,37 @@ p, li { line-height: 1.6; }
 .grid { display: grid; gap: 18px; }
 .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.momentum-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 10px;
+  background: rgba(38, 39, 58, 0.46);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+.momentum-strip article { display: grid; gap: 3px; padding: 11px 13px; border-right: 1px solid var(--line); }
+.momentum-strip article:last-child { border-right: 0; }
+.momentum-strip strong { color: var(--gold); font-size: 1.4rem; }
+.momentum-strip article > span:last-child { color: var(--muted); font-size: 0.76rem; }
+.practice-spark {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  color: #3b3648;
+  background: linear-gradient(105deg, rgba(246, 193, 170, 0.94), rgba(255, 214, 163, 0.94), rgba(190, 223, 215, 0.94));
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+.practice-spark .small { color: #55475a; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.focus-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
+.focus-flow span { display: flex; gap: 8px; align-items: center; padding: 10px 12px; color: var(--muted); background: rgba(39, 40, 59, 0.5); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(16px); }
+.focus-flow strong { display: grid; place-items: center; min-width: 26px; height: 26px; color: #3b3648; background: var(--gold); border-radius: 50%; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .button {
   min-height: 44px;
@@ -224,6 +255,22 @@ button.day-dot { width: 100%; padding: 0; }
 .foundation-step span:last-child { display: block; color: var(--muted); font-size: 0.8rem; }
 .foundation-number { display: grid; place-items: center; width: 34px; height: 34px; color: #35364d; font-weight: 800; background: linear-gradient(135deg, var(--coral), var(--gold)); border-radius: 50%; }
 .guided-choice input { border-style: dashed; }
+.action-contract { display: grid; gap: 18px; }
+.follow-up-panel { border-color: rgba(255, 208, 157, 0.46); background: linear-gradient(145deg, rgba(86, 67, 78, 0.82), rgba(43, 50, 67, 0.82)); }
+.action-contract-heading { display: flex; gap: 12px; align-items: start; justify-content: space-between; }
+.action-contract-heading h2, .action-contract-heading p { margin-bottom: 0; }
+.mission-preview, .action-summary {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(246, 193, 170, 0.12), rgba(190, 223, 215, 0.1));
+  border: 1px solid rgba(255, 215, 178, 0.26);
+  border-radius: 15px;
+}
+.mission-preview p, .action-summary p { margin: 5px 0 0; }
+.completion-button { width: 100%; min-height: 54px; font-size: 1.04rem; }
+.milestone-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.milestone-card { padding: 14px; opacity: 0.52; background: rgba(35, 37, 55, 0.38); border: 1px solid var(--line); border-radius: 16px; }
+.milestone-card.earned { opacity: 1; border-color: rgba(255, 208, 157, 0.52); background: linear-gradient(145deg, rgba(84, 69, 82, 0.62), rgba(52, 59, 75, 0.62)); }
+.milestone-card p { margin-bottom: 0; color: var(--muted); font-size: 0.84rem; }
 .timer {
   display: grid;
   place-items: center;
@@ -274,7 +321,9 @@ button.day-dot { width: 100%; padding: 0; }
   .nav { display: flex; gap: 6px; overflow-x: auto; }
   .nav-button { justify-content: center; min-width: 88px; padding: 10px; text-align: center; }
   .main { padding: 20px 16px 104px; }
-  .topbar, .grid.two, .grid.three, .week-map, .foundation-map { grid-template-columns: 1fr; }
+  .topbar, .grid.two, .grid.three, .week-map, .foundation-map, .momentum-strip, .focus-flow, .milestone-grid { grid-template-columns: 1fr; }
+  .momentum-strip article { border-right: 0; border-bottom: 1px solid var(--line); }
+  .momentum-strip article:last-child { border-bottom: 0; }
   .hero { min-height: 390px; }
   .week-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
