@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v0.1.0";
+const APP_VERSION = "v0.2.0";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -13,6 +13,119 @@ const ICONS = {
   growth: "↗",
   guide: "⌁",
   settings: "⚙"
+};
+
+const FOUNDATION_CONTENT = [
+  {
+    id: "introduction",
+    label: "Introduction",
+    title: "The Habit of Being Yourself",
+    page: "Introduction, pages 16-26",
+    focus: "Clarify why changing familiar thoughts, feelings, and behaviors requires deliberate practice.",
+    why: "The introduction establishes the purpose of the journey before the science and meditation process begin.",
+    prompt: "Which familiar part of yourself are you no longer willing to treat as permanent?",
+    action: "Notice one moment today when the familiar self feels automatic."
+  },
+  {
+    id: "chapter-1",
+    label: "Chapter 1",
+    title: "The Quantum You",
+    page: "Chapter 1, pages 28-62",
+    focus: "Consider the relationship between attention, possibility, and the reality you repeatedly expect.",
+    why: "This chapter introduces the book's model for moving attention away from the known and toward a new possibility.",
+    prompt: "Where has your attention been repeatedly reinforcing the same expected outcome?",
+    action: "Catch one familiar expectation and name a different possibility."
+  },
+  {
+    id: "chapter-2",
+    label: "Chapter 2",
+    title: "Overcoming Your Environment",
+    page: "Chapter 2, pages 63-77",
+    focus: "Recognize how people, places, objects, and routines cue the familiar self.",
+    why: "Changing requires becoming greater than environmental reminders that automatically reproduce old thoughts and feelings.",
+    prompt: "Which part of your environment most reliably activates your old pattern?",
+    action: "Respond differently to one familiar environmental cue."
+  },
+  {
+    id: "chapter-3",
+    label: "Chapter 3",
+    title: "Overcoming Your Body",
+    page: "Chapter 3, pages 78-109",
+    focus: "Observe how repeated emotions can train the body to expect and reproduce the old state.",
+    why: "The body can become conditioned to familiar emotions even when the conscious mind wants something different.",
+    prompt: "Where and how does your body signal the familiar emotional state?",
+    action: "Pause when the body activates and observe it before following it."
+  },
+  {
+    id: "chapter-4",
+    label: "Chapter 4",
+    title: "Overcoming Time",
+    page: "Chapter 4, pages 110-121",
+    focus: "Notice when attention is living in remembered past events or an anticipated familiar future.",
+    why: "A new response becomes possible when attention returns to the present instead of rehearsing the known.",
+    prompt: "Does your pattern pull you more toward replaying the past or anticipating the future?",
+    action: "Return to the present during one familiar mental replay."
+  },
+  {
+    id: "chapter-5",
+    label: "Chapter 5",
+    title: "Survival vs. Creation",
+    page: "Chapter 5, pages 122-146",
+    focus: "Distinguish stress-driven survival reactions from a more open creative state.",
+    why: "The old self is often maintained by stress chemistry, narrowed attention, and constant preparation for threat.",
+    prompt: "How does survival mode change your thoughts, body, and choices?",
+    action: "Before one decision, ask whether it comes from survival or creation."
+  },
+  {
+    id: "chapter-6",
+    label: "Chapter 6",
+    title: "Three Brains: Thinking to Doing to Being",
+    page: "Chapter 6, pages 148-171",
+    focus: "Understand change as a movement from learning, to practice, to an embodied way of being.",
+    why: "Insight alone is not the end of the process; repeated action and experience help make a new response familiar.",
+    prompt: "What do you understand intellectually but have not yet practiced consistently?",
+    action: "Turn one useful idea into one observable action."
+  },
+  {
+    id: "chapter-7",
+    label: "Chapter 7",
+    title: "The Gap",
+    page: "Chapter 7, pages 172-199",
+    focus: "Notice the difference between the identity shown to the world and the feelings hidden underneath it.",
+    why: "Seeing the gap honestly helps recover energy spent maintaining an identity that no longer fits.",
+    prompt: "Where is there a gap between how you appear and what you repeatedly feel inside?",
+    action: "Choose one honest, grounded response instead of maintaining an appearance."
+  },
+  {
+    id: "chapter-8",
+    label: "Chapter 8",
+    title: "Meditation and Your Future",
+    page: "Chapter 8, pages 200-240",
+    focus: "Understand meditation as a practice for observing the familiar self and rehearsing a different state.",
+    why: "This chapter connects the foundational ideas to the meditation process that follows.",
+    prompt: "What would make meditation a practical training process rather than only a relaxation exercise?",
+    action: "Protect a small period of stillness without trying to solve anything."
+  },
+  {
+    id: "chapter-9",
+    label: "Chapter 9",
+    title: "The Meditative Process: Preparation",
+    page: "Chapter 9, pages 242-252",
+    focus: "Prepare the setting, posture, schedule, and expectations for the four-week process.",
+    why: "Chapter 9 is the required bridge between the foundational teaching and Week One's induction practice.",
+    prompt: "What practical condition will make it easier for you to return to this practice every day?",
+    action: "Prepare your practice space, time, posture, and interruption plan."
+  }
+];
+
+const GUIDED_OPTIONS = {
+  primaryPattern: ["Reacting defensively", "Expecting the worst", "Avoiding difficult situations", "Seeking reassurance", "Procrastinating", "Judging myself harshly", "Withdrawing when uncomfortable"],
+  triggers: ["Criticism or feedback", "Uncertainty", "Feeling ignored or rejected", "Conflict", "Making a mistake", "Pressure or deadlines", "Being compared to others"],
+  thoughts: ["I am not enough", "Something will go wrong", "I have to protect myself", "I cannot handle this", "They do not understand me", "I need control to feel safe"],
+  emotions: ["Anxiety", "Anger", "Shame", "Fear", "Resentment", "Sadness", "Defensiveness"],
+  behaviors: ["Arguing or defending", "Withdrawing or shutting down", "Avoiding or delaying", "Overthinking", "Checking or seeking reassurance", "Trying to control the outcome"],
+  futureResponse: ["Pause and respond calmly", "Stay present with uncertainty", "Listen before defending", "Choose a grounded next action", "Speak honestly and respectfully", "Let the feeling pass without obeying it"],
+  firstDeclaration: ["expecting the worst", "reacting defensively", "believing I am not enough", "avoiding discomfort", "trying to control every outcome", "repeating the same emotional reaction"]
 };
 
 const WEEK_CONTENT = [
@@ -145,13 +258,19 @@ function loadState() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!parsed || parsed.version !== 1) return structuredClone(DEFAULT_STATE);
-    return {
+    const loaded = {
       ...structuredClone(DEFAULT_STATE),
       ...parsed,
       settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
       archives: Array.isArray(parsed.archives) ? parsed.archives : [],
       journal: Array.isArray(parsed.journal) ? parsed.journal : []
     };
+    if (loaded.activeJourney) {
+      loaded.activeJourney.foundationRecords = Array.isArray(loaded.activeJourney.foundationRecords) ? loaded.activeJourney.foundationRecords : [];
+      loaded.activeJourney.currentFoundationIndex = Number(loaded.activeJourney.currentFoundationIndex || 0);
+      loaded.activeJourney.foundationsComplete = Boolean(loaded.activeJourney.foundationsComplete);
+    }
+    return loaded;
   } catch {
     return structuredClone(DEFAULT_STATE);
   }
@@ -247,7 +366,7 @@ function render() {
 
   app.className = "app-shell";
   const renderer = {
-    today: renderToday,
+    today: state.activeJourney.foundationsComplete ? renderToday : renderFoundation,
     journey: renderJourney,
     journal: renderJournal,
     growth: renderGrowth,
@@ -283,6 +402,22 @@ function render() {
 
 function navButton(view, label) {
   return `<button class="nav-button ${activeView === view ? "active" : ""}" type="button" data-view="${view}"><span>${ICONS[view]}</span><span>${label}</span></button>`;
+}
+
+function guidedChoice(name, label, placeholder) {
+  const options = GUIDED_OPTIONS[name] || [];
+  return `
+    <div class="field guided-choice">
+      <label for="${name}Choice">${escapeHTML(label)}</label>
+      <select id="${name}Choice" name="${name}Choice" required>
+        <option value="">Choose a starting point</option>
+        ${options.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}
+        <option value="custom">Write my own</option>
+      </select>
+      <input name="${name}Custom" data-custom-for="${name}Choice" maxlength="220" placeholder="${escapeHTML(placeholder)}">
+      <span class="small">Choose an option, or write your own more specific answer.</span>
+    </div>
+  `;
 }
 
 function renderStart() {
@@ -326,27 +461,26 @@ function renderStart() {
               <label for="title">Journey name</label>
               <input id="title" name="title" required maxlength="80" placeholder="Becoming calm under criticism">
             </div>
-            <div class="field">
-              <label for="primaryPattern">Primary habit or identity pattern</label>
-              <textarea id="primaryPattern" name="primaryPattern" required placeholder="I withdraw, become defensive, and replay criticism for hours."></textarea>
-            </div>
+            ${guidedChoice("primaryPattern", "Primary habit or identity pattern", "Example: I withdraw and replay criticism for hours.")}
             <div class="grid two">
-              <div class="field"><label for="triggers">Common triggers</label><textarea id="triggers" name="triggers" required placeholder="Feedback, feeling misunderstood, raised voices"></textarea></div>
-              <div class="field"><label for="thoughts">Recurring thoughts</label><textarea id="thoughts" name="thoughts" required placeholder="They do not respect me. I am failing."></textarea></div>
-              <div class="field"><label for="emotions">Familiar emotions</label><textarea id="emotions" name="emotions" required placeholder="Defensiveness, shame, anger"></textarea></div>
-              <div class="field"><label for="behaviors">Automatic behaviors</label><textarea id="behaviors" name="behaviors" required placeholder="Shutting down, arguing, avoiding"></textarea></div>
+              ${guidedChoice("triggers", "Common trigger", "Describe your own trigger")}
+              ${guidedChoice("thoughts", "Recurring thought", "Write the thought in your own words")}
+              ${guidedChoice("emotions", "Familiar emotion", "Name your own emotion")}
+              ${guidedChoice("behaviors", "Automatic behavior", "Describe what you usually do")}
             </div>
-            <div class="field">
-              <label for="futureResponse">Desired future-self response</label>
-              <textarea id="futureResponse" name="futureResponse" required placeholder="I stay present, listen clearly, and respond after choosing what is useful."></textarea>
-            </div>
+            ${guidedChoice("futureResponse", "Desired future-self response", "Describe what your new self would choose")}
             <div class="field">
               <label for="statement">Journey statement</label>
               <input id="statement" name="statement" required maxlength="180" placeholder="I am changing my habit of withdrawing when I feel criticized.">
             </div>
-            <div class="field">
-              <label for="firstDeclaration">First Change Declaration</label>
-              <input id="firstDeclaration" name="firstDeclaration" required maxlength="180" placeholder="reacting defensively when I feel criticized">
+            <div class="field guided-choice">
+              <label for="firstDeclarationChoice">First Change Declaration</label>
+              <select id="firstDeclarationChoice" name="firstDeclarationChoice" required>
+                <option value="">Choose a starting declaration</option>
+                ${GUIDED_OPTIONS.firstDeclaration.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}
+                <option value="custom">Write my own</option>
+              </select>
+              <input name="firstDeclarationCustom" data-custom-for="firstDeclarationChoice" maxlength="180" placeholder="Write your own declaration">
               <div class="declaration"><p>${DECLARATION_PREFIX} <strong>______</strong>, ${DECLARATION_SUFFIX}</p></div>
             </div>
             <div class="grid two">
@@ -363,13 +497,63 @@ function renderStart() {
                 <input id="practiceTime" name="practiceTime" type="time" value="${escapeHTML(state.settings.dailyReminder)}">
               </div>
             </div>
-            <button class="button gold" type="submit">Begin Week One</button>
+            <button class="button gold" type="submit">Begin with the Introduction</button>
           </form>
         </section>
         ${archiveMarkup}
         <p class="small">Independent personal-growth companion. Keep the book available for the referenced chapters. This app is not medical or mental-health treatment.</p>
       </div>
     </main>
+  `;
+}
+
+function renderFoundation() {
+  const journey = state.activeJourney;
+  const index = Math.min(FOUNDATION_CONTENT.length - 1, journey.currentFoundationIndex || 0);
+  const lesson = FOUNDATION_CONTENT[index];
+  const completed = journey.foundationRecords.length;
+  const progress = Math.round((completed / FOUNDATION_CONTENT.length) * 100);
+
+  return `
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Foundations · ${escapeHTML(lesson.label)} · ${index + 1} of ${FOUNDATION_CONTENT.length}</p>
+        <h1>${escapeHTML(lesson.title)}</h1>
+        <p class="lead">${escapeHTML(lesson.focus)}</p>
+      </div>
+      <div class="card stat">
+        <span class="small">Foundation progress</span>
+        <strong>${completed}/${FOUNDATION_CONTENT.length}</strong>
+        <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+      </div>
+    </header>
+
+    <section class="panel foundation-lesson">
+      <div class="meta-row"><span class="pill gold">${escapeHTML(lesson.page)}</span><span class="pill">Required before Week One</span></div>
+      <h2 style="margin-top:14px;">Why this comes first</h2>
+      <p>${escapeHTML(lesson.why)}</p>
+      <div class="notice">Read or review this section in your copy of the book. The app keeps the order and helps you apply it without reproducing the chapter.</div>
+    </section>
+
+    <form id="foundationForm" class="form">
+      <section class="panel">
+        <p class="eyebrow">Required reflection</p>
+        <h2>${escapeHTML(lesson.prompt)}</h2>
+        <div class="field">
+          <label for="foundationReflection">What stood out?</label>
+          <textarea id="foundationReflection" name="reflection" required placeholder="Connect the chapter to the pattern you chose for this journey."></textarea>
+        </div>
+        <div class="field">
+          <label for="foundationApplication">Apply it today</label>
+          <textarea id="foundationApplication" name="application" required placeholder="${escapeHTML(lesson.action)}"></textarea>
+        </div>
+        <label class="check-row">
+          <input type="checkbox" name="reviewed" required>
+          I read or reviewed the referenced section and completed this reflection honestly.
+        </label>
+      </section>
+      <button class="button gold" type="submit">${index === FOUNDATION_CONTENT.length - 1 ? "Complete Foundations and Unlock Week One" : `Complete and Continue to ${FOUNDATION_CONTENT[index + 1].label}`}</button>
+    </form>
   `;
 }
 
@@ -518,6 +702,17 @@ function renderJourney() {
     </header>
 
     <section class="panel">
+      <p class="eyebrow">Required Foundations</p>
+      <h2>Introduction and Chapters 1-9</h2>
+      <p class="small">These lessons establish the book's ideas and preparation in order. Week One begins at Chapter 10 only after all Foundations are complete.</p>
+      <div class="foundation-map">
+        ${FOUNDATION_CONTENT.map((lesson, index) => renderFoundationDot(journey, lesson, index)).join("")}
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="eyebrow">Four-week practice</p>
+      <h2>${journey.foundationsComplete ? "Week One is unlocked" : "Locked until Foundations are complete"}</h2>
       <div class="week-map">
         ${WEEK_CONTENT.map((week) => renderWeekCard(week, journey)).join("")}
       </div>
@@ -545,12 +740,23 @@ function renderJourney() {
   `;
 }
 
+function renderFoundationDot(journey, lesson, index) {
+  const record = journey.foundationRecords.find((item) => item.id === lesson.id);
+  const current = !journey.foundationsComplete && index === journey.currentFoundationIndex;
+  return `
+    <article class="foundation-step ${record ? "complete" : ""} ${current ? "current" : ""}">
+      <span class="foundation-number">${record ? "✓" : index + 1}</span>
+      <div><strong>${escapeHTML(lesson.label)}</strong><span>${escapeHTML(lesson.title)}</span></div>
+    </article>
+  `;
+}
+
 function renderWeekCard(week, journey) {
   const cycles = Math.max(1, ...getRecords(journey).filter((item) => item.week === week.week).map((item) => item.cycle));
   const cycle = week.week === journey.currentWeek ? journey.currentCycle : cycles;
   const isActive = week.week === journey.currentWeek;
   return `
-    <article class="week-card ${isActive ? "active" : ""}">
+    <article class="week-card ${isActive && journey.foundationsComplete ? "active" : ""} ${journey.foundationsComplete ? "" : "locked"}">
       <p class="eyebrow">Week ${week.week} · Cycle ${cycle}</p>
       <h3>${escapeHTML(week.shortTitle)}</h3>
       <p class="small">${escapeHTML(week.focus)}</p>
@@ -563,8 +769,8 @@ function renderWeekCard(week, journey) {
 
 function renderDayDot(journey, week, cycle, day) {
   const record = getRecord(journey, week, cycle, day);
-  const current = week === journey.currentWeek && cycle === journey.currentCycle && day === journey.currentDay && !journey.needsReview;
-  const available = Boolean(record || current || state.settings.flexibleProgression);
+  const current = journey.foundationsComplete && week === journey.currentWeek && cycle === journey.currentCycle && day === journey.currentDay && !journey.needsReview;
+  const available = Boolean(record || current || (journey.foundationsComplete && state.settings.flexibleProgression));
   const classes = [record ? "complete" : "", current ? "current" : "", available ? "" : "locked"].filter(Boolean).join(" ");
   if (!available) return `<span class="day-dot ${classes}" title="Complete earlier days first">${day}</span>`;
   return `<button class="day-dot ${classes}" type="button" data-action="${record ? "view-record" : "jump-day"}" data-week="${week}" data-cycle="${cycle}" data-day="${day}" title="${record ? "View completed entry" : "Make this the active day"}">${day}</button>`;
@@ -578,11 +784,13 @@ function renderJournal() {
     .sort((a, b) => new Date(b.record.completedAt) - new Date(a.record.completedAt));
   const reviews = journeys.flatMap((journey) => (journey.reviews || []).map((review) => ({ journey, review })))
     .sort((a, b) => new Date(b.review.completedAt) - new Date(a.review.completedAt));
+  const foundations = journeys.flatMap((journey) => (journey.foundationRecords || []).map((record) => ({ journey, record })))
+    .sort((a, b) => new Date(b.record.completedAt) - new Date(a.record.completedAt));
 
   return `
     <header class="topbar">
       <div><p class="eyebrow">Preserved entries</p><h1>Return to what you noticed.</h1><p class="lead">Search declarations, triggers, reflections, and evidence across every cycle and completed journey.</p></div>
-      <div class="card stat"><span class="small">Practice entries</span><strong>${entries.length}</strong><span class="small">${reviews.length} weekly reviews</span></div>
+      <div class="card stat"><span class="small">Preserved entries</span><strong>${entries.length + foundations.length}</strong><span class="small">${foundations.length} foundations · ${reviews.length} weekly reviews</span></div>
     </header>
     <section class="panel">
       <form id="journalSearchForm" class="actions">
@@ -590,6 +798,17 @@ function renderJournal() {
         <button class="button secondary" type="submit">Search</button>
         <button class="button secondary" type="button" data-action="clear-search">Clear</button>
       </form>
+    </section>
+    <section class="panel">
+      <h2>Foundation entries</h2>
+      ${foundations.length ? foundations.map(({ journey, record }) => `
+        <article class="entry">
+          <div class="meta-row"><span class="pill">${escapeHTML(journey.title)}</span><span class="pill gold">${escapeHTML(record.label)}</span><span class="small">${escapeHTML(formatDate(record.completedAt))}</span></div>
+          <h3>${escapeHTML(record.title)}</h3>
+          <p><strong>Reflection:</strong> ${escapeHTML(record.reflection)}</p>
+          <p><strong>Application:</strong> ${escapeHTML(record.application)}</p>
+        </article>
+      `).join("") : `<div class="empty">Foundation reflections appear here as you complete them.</div>`}
     </section>
     <section class="panel">
       <h2>Daily practice entries</h2>
@@ -705,7 +924,10 @@ function renderGuide() {
     </header>
     <section class="panel">
       <div class="timeline">
-        ${GUIDE_SECTIONS.map(([title, pages, note]) => `
+        ${FOUNDATION_CONTENT.map((lesson) => `
+          <article class="timeline-item"><div><span class="pill gold">${escapeHTML(lesson.label)}</span></div><div><h3>${escapeHTML(lesson.title)}</h3><p>${escapeHTML(lesson.focus)}</p><p class="small">${escapeHTML(lesson.page)}</p></div></article>
+        `).join("")}
+        ${GUIDE_SECTIONS.slice(1).map(([title, pages, note]) => `
           <article class="timeline-item"><div><span class="pill gold">${escapeHTML(pages)}</span></div><div><h3>${escapeHTML(title)}</h3><p>${escapeHTML(note)}</p></div></article>
         `).join("")}
       </div>
@@ -746,7 +968,7 @@ function renderSettings() {
       </article>
       <article class="panel">
         <h2>Progression override</h2>
-        <div class="notice danger"><strong>Sequential progression is recommended.</strong><br>Flexible Progression allows unfinished days and weeks to be skipped. Completed entries are never deleted.</div>
+        <div class="notice danger"><strong>Sequential progression is recommended.</strong><br>Flexible Progression allows unfinished practice days and weeks to be skipped after Foundations. Introduction and Chapters 1-9 always remain required and sequential.</div>
         <form id="progressionForm" style="margin-top:16px;">
           <label class="check-row"><input type="checkbox" name="flexibleProgression" ${settings.flexibleProgression ? "checked" : ""}> Allow flexible progression and day skipping</label>
           <button class="button secondary" type="submit" style="margin-top:14px;">Save progression setting</button>
@@ -851,6 +1073,14 @@ function speakGuidance() {
   window.speechSynthesis.speak(utterance);
 }
 
+function resolveGuidedChoice(data, name) {
+  const choice = String(data.get(`${name}Choice`) || "").trim();
+  const custom = String(data.get(`${name}Custom`) || "").trim();
+  if (custom) return custom;
+  if (!choice || choice === "custom") throw new Error(`Choose or write an answer for ${name.replace(/([A-Z])/g, " $1").toLowerCase()}.`);
+  return choice;
+}
+
 function handlePreparation(form) {
   const data = new FormData(form);
   const now = new Date().toISOString();
@@ -859,15 +1089,18 @@ function handlePreparation(form) {
   state.activeJourney = {
     id: createId(),
     title: String(data.get("title")).trim(),
-    primaryPattern: String(data.get("primaryPattern")).trim(),
-    triggers: String(data.get("triggers")).trim(),
-    thoughts: String(data.get("thoughts")).trim(),
-    emotions: String(data.get("emotions")).trim(),
-    behaviors: String(data.get("behaviors")).trim(),
-    futureResponse: String(data.get("futureResponse")).trim(),
+    primaryPattern: resolveGuidedChoice(data, "primaryPattern"),
+    triggers: resolveGuidedChoice(data, "triggers"),
+    thoughts: resolveGuidedChoice(data, "thoughts"),
+    emotions: resolveGuidedChoice(data, "emotions"),
+    behaviors: resolveGuidedChoice(data, "behaviors"),
+    futureResponse: resolveGuidedChoice(data, "futureResponse"),
     statement: String(data.get("statement")).trim(),
-    firstDeclaration: String(data.get("firstDeclaration")).trim(),
+    firstDeclaration: resolveGuidedChoice(data, "firstDeclaration"),
     startedAt: now,
+    foundationsComplete: false,
+    currentFoundationIndex: 0,
+    foundationRecords: [],
     currentWeek: 1,
     currentCycle: 1,
     currentDay: 1,
@@ -880,7 +1113,31 @@ function handlePreparation(form) {
   activeView = "today";
   render();
   scheduleReminders();
-  showToast("Journey started. Week One begins now.");
+  showToast("Journey started. Begin with the Introduction; Week One unlocks after Chapter 9.");
+}
+
+function handleFoundation(form) {
+  const journey = state.activeJourney;
+  const index = Math.min(FOUNDATION_CONTENT.length - 1, journey.currentFoundationIndex || 0);
+  const lesson = FOUNDATION_CONTENT[index];
+  const data = new FormData(form);
+  journey.foundationRecords.push({
+    id: lesson.id,
+    label: lesson.label,
+    title: lesson.title,
+    reflection: String(data.get("reflection") || "").trim(),
+    application: String(data.get("application") || "").trim(),
+    completedAt: new Date().toISOString()
+  });
+  if (index >= FOUNDATION_CONTENT.length - 1) {
+    journey.foundationsComplete = true;
+    journey.currentFoundationIndex = FOUNDATION_CONTENT.length;
+  } else {
+    journey.currentFoundationIndex = index + 1;
+  }
+  saveState();
+  render();
+  showToast(journey.foundationsComplete ? "Foundations complete. Week One induction is now unlocked." : `${FOUNDATION_CONTENT[index + 1].label} is ready.`);
 }
 
 function handleDailyPractice(form) {
@@ -999,7 +1256,7 @@ function handleProgression(form) {
 }
 
 function jumpToDay(element) {
-  if (!state.settings.flexibleProgression) return;
+  if (!state.settings.flexibleProgression || !state.activeJourney.foundationsComplete) return;
   const journey = state.activeJourney;
   journey.currentWeek = Number(element.dataset.week);
   journey.currentCycle = Number(element.dataset.cycle);
@@ -1144,6 +1401,7 @@ app.addEventListener("submit", async (event) => {
   const form = event.target;
   try {
     if (form.id === "preparationForm") handlePreparation(form);
+    if (form.id === "foundationForm") handleFoundation(form);
     if (form.id === "dailyPracticeForm") handleDailyPractice(form);
     if (form.id === "weeklyReviewForm") handleWeeklyReview(form, event.submitter);
     if (form.id === "settingsForm") handleSettings(form);

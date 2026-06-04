@@ -4,8 +4,8 @@
   "description": "A private companion for breaking the habit of being yourself.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0d171a",
-  "theme_color": "#152226",
+  "background_color": "#34364c",
+  "theme_color": "#4b465f",
   "icons": [
     {
       "src": "./icon.svg",

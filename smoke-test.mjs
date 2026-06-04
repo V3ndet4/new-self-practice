@@ -76,14 +76,21 @@ try {
   await evaluate(`(() => {
     const values = {
       title: "Smoke Test Journey",
-      primaryPattern: "reacting automatically",
-      triggers: "unexpected feedback",
-      thoughts: "I must defend myself",
-      emotions: "tension",
-      behaviors: "arguing",
-      futureResponse: "pause and listen",
+      primaryPatternChoice: "custom",
+      primaryPatternCustom: "reacting automatically",
+      triggersChoice: "custom",
+      triggersCustom: "unexpected feedback",
+      thoughtsChoice: "custom",
+      thoughtsCustom: "I must defend myself",
+      emotionsChoice: "custom",
+      emotionsCustom: "tension",
+      behaviorsChoice: "custom",
+      behaviorsCustom: "arguing",
+      futureResponseChoice: "custom",
+      futureResponseCustom: "pause and listen",
       statement: "I am changing my automatic reaction.",
-      firstDeclaration: "reacting automatically",
+      firstDeclarationChoice: "custom",
+      firstDeclarationCustom: "reacting automatically",
       duration: "15",
       practiceTime: "07:30"
     };
@@ -93,6 +100,23 @@ try {
   })()`);
   await wait(250);
   assert(await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney.currentDay") === 1, "Preparation did not create the journey.");
+  assert(await evaluate("document.querySelector('h1')?.textContent") === "The Habit of Being Yourself", "The journey skipped the Introduction.");
+
+  for (let lesson = 1; lesson <= 10; lesson += 1) {
+    await evaluate(`(() => {
+      const form = document.querySelector("#foundationForm");
+      form.elements.reflection.value = "Foundation reflection ${lesson}";
+      form.elements.application.value = "Foundation application ${lesson}";
+      form.elements.reviewed.checked = true;
+      form.requestSubmit();
+    })()`);
+    await wait(80);
+  }
+
+  const afterFoundations = await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney");
+  assert(afterFoundations.foundationsComplete === true, "Foundations did not complete.");
+  assert(afterFoundations.foundationRecords.length === 10, "Foundation reflections were not preserved.");
+  assert(await evaluate("document.querySelector('h1')?.textContent") === "Prepare the space", "Week One did not unlock after Chapter 9.");
 
   await evaluate(`(() => {
     document.querySelector("#reflection").value = "This should remain blocked.";
@@ -150,7 +174,7 @@ try {
   assert(afterJump.currentWeek === 4 && afterJump.currentDay === 7, "Flexible Progression did not allow an explicit future-day jump.");
   assert(exceptions.length === 0, `Browser exceptions: ${exceptions.join("; ")}`);
 
-  console.log("SMOKE_TEST_OK: preparation, meditation gate, 7-day sequence, weekly repeat, preservation, and Settings override/jump");
+  console.log("SMOKE_TEST_OK: guided setup, ordered Foundations, meditation gate, 7-day sequence, weekly repeat, preservation, and Settings override/jump");
 } finally {
   socket.close();
   edge.kill();
