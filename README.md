@@ -2,7 +2,7 @@
 
 A private, local-first companion for practicing the four-week process in *Breaking the Habit of Being Yourself*.
 
-Current release: `v1.0`
+Current release: `v1.4`
 
 ## Product rules
 
@@ -16,6 +16,8 @@ Current release: `v1.0`
 - All data stays in the browser unless the user exports an encrypted backup.
 - Every Foundation and daily session ends with a required One Move action contract: cue, observable response, smallest version, and proof.
 - Sunset glow, return streaks, milestones, and practice sparks make consistency visible without weakening the required sequence.
+- Pattern Lab supports Review the Moment and Rehearse the Moment with personalized branching choices.
+- An optional deterministic private reflection coach specializes observations from local Pattern Lab sessions without sending data anywhere.
 
 The app uses original companion exercises and page references. It does not reproduce the book's long-form text or guided scripts.
 

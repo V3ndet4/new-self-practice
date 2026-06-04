@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v1.0";
+const APP_VERSION = "v1.4";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -9,6 +9,7 @@ const app = document.getElementById("app");
 const ICONS = {
   today: "◉",
   journey: "◇",
+  lab: "◎",
   journal: "▤",
   growth: "↗",
   guide: "⌁",
@@ -138,6 +139,16 @@ const PRACTICE_SPARKS = [
   "Notice what changes when you stop rehearsing the familiar outcome."
 ];
 
+const LAB_BODY_OPTIONS = ["Tight chest", "Shallow breath", "Tense jaw", "Heavy stomach", "Racing heart", "Restless energy", "Numb or disconnected"];
+const LAB_URGE_OPTIONS = ["Defend myself", "Withdraw", "Avoid or delay", "Control the outcome", "Seek reassurance", "Overthink", "React immediately"];
+const LAB_INTERRUPT_OPTIONS = [
+  ["trigger", "At the trigger", "Name what is happening before the story grows."],
+  ["thought", "At the thought", "Label the old thought instead of treating it as a fact."],
+  ["body", "At the body signal", "Pause, breathe, and let the physical activation settle."],
+  ["urge", "At the urge", "Delay the automatic action long enough to choose."],
+  ["behavior", "At the behavior", "Choose the smallest visible response of the new self."]
+];
+
 const MOMENTUM_MILESTONES = [
   { points: 100, title: "First Light", note: "You began turning insight into repeated action." },
   { points: 300, title: "Steady Horizon", note: "Your return to practice is becoming visible." },
@@ -255,6 +266,7 @@ const DEFAULT_STATE = {
   activeJourney: null,
   archives: [],
   journal: [],
+  patternLab: [],
   settings: {
     duration: 15,
     spokenGuidance: true,
@@ -262,7 +274,9 @@ const DEFAULT_STATE = {
     dailyReminder: "07:30",
     eveningReminder: "20:30",
     remindersEnabled: false,
-    journalQuery: ""
+    journalQuery: "",
+    privateCoachEnabled: true,
+    labMode: "review"
   }
 };
 
@@ -281,7 +295,8 @@ function loadState() {
       ...parsed,
       settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
       archives: Array.isArray(parsed.archives) ? parsed.archives : [],
-      journal: Array.isArray(parsed.journal) ? parsed.journal : []
+      journal: Array.isArray(parsed.journal) ? parsed.journal : [],
+      patternLab: Array.isArray(parsed.patternLab) ? parsed.patternLab : []
     };
     if (loaded.activeJourney) {
       loaded.activeJourney.foundationRecords = Array.isArray(loaded.activeJourney.foundationRecords) ? loaded.activeJourney.foundationRecords : [];
@@ -377,7 +392,8 @@ function getAllFoundationRecords() {
 
 function calculateStreak() {
   const dates = [...getAllJourneyRecords(), ...getAllFoundationRecords()]
-    .map((record) => String(record.completedAt || "").slice(0, 10))
+    .concat(state.patternLab || [])
+    .map((record) => String(record.completedAt || record.createdAt || "").slice(0, 10))
     .filter(Boolean);
   const unique = new Set(dates);
   if (!unique.size) return 0;
@@ -399,10 +415,11 @@ function getMomentum() {
   const actionProofs = records.filter((record) => record.actionContract?.proof).length
     + foundations.filter((record) => record.actionContract?.proof).length;
   const followThrough = [...records, ...foundations].filter((record) => ["completed", "minimum"].includes(record.actionFollowUp?.outcome)).length;
-  const points = foundations.length * 20 + records.length * 50 + evidence * 20 + actionProofs * 10 + followThrough * 25;
+  const labSessions = state.patternLab.length;
+  const points = foundations.length * 20 + records.length * 50 + evidence * 20 + actionProofs * 10 + followThrough * 25 + labSessions * 30;
   const earned = MOMENTUM_MILESTONES.filter((milestone) => points >= milestone.points);
   const next = MOMENTUM_MILESTONES.find((milestone) => points < milestone.points) || null;
-  return { points, streak: calculateStreak(), evidence, actionProofs, followThrough, earned, next };
+  return { points, streak: calculateStreak(), evidence, actionProofs, followThrough, labSessions, earned, next };
 }
 
 function renderMomentumStrip() {
@@ -536,6 +553,7 @@ function render() {
   const renderer = {
     today: state.activeJourney.foundationsComplete ? renderToday : renderFoundation,
     journey: renderJourney,
+    lab: renderPatternLab,
     journal: renderJournal,
     growth: renderGrowth,
     guide: renderGuide,
@@ -555,6 +573,7 @@ function render() {
         <nav class="nav" aria-label="Main navigation">
           ${navButton("today", "Today")}
           ${navButton("journey", "Journey")}
+          ${navButton("lab", "Pattern Lab")}
           ${navButton("journal", "Journal")}
           ${navButton("growth", "Growth")}
           ${navButton("guide", "Book Guide")}
@@ -967,6 +986,198 @@ function renderDayDot(journey, week, cycle, day) {
   return `<button class="day-dot ${classes}" type="button" data-action="${record ? "view-record" : "jump-day"}" data-week="${week}" data-cycle="${cycle}" data-day="${day}" title="${record ? "View completed entry" : "Make this the active day"}">${day}</button>`;
 }
 
+function getLabSessions(mode = "", journeyId = state.activeJourney?.id || "") {
+  return state.patternLab
+    .filter((session) => (!journeyId || session.journeyId === journeyId) && (!mode || session.mode === mode))
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function countMostCommon(values) {
+  const counts = new Map();
+  values.filter(Boolean).forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0] || ["Not enough data yet", 0];
+}
+
+function getPrivateCoachInsight() {
+  const sessions = getLabSessions();
+  const reviews = sessions.filter((session) => session.mode === "review");
+  const rehearsals = sessions.filter((session) => session.mode === "rehearse");
+  const [topTrigger, triggerCount] = countMostCommon(reviews.map((session) => session.trigger));
+  const [topInterruption, interruptionCount] = countMostCommon(reviews.map((session) => session.interruptionPoint));
+  const [topBranch, branchCount] = countMostCommon(rehearsals.map((session) => session.selectedBranch));
+  const records = getAllJourneyRecords();
+  const before = average(records.map((record) => record.intensityBefore));
+  const after = average(records.map((record) => record.intensityAfter));
+
+  if (!sessions.length) {
+    return {
+      headline: "Your coach needs one real moment.",
+      observation: `Start with "${state.activeJourney.triggers}" or rehearse how you want to respond as "${state.activeJourney.futureResponse}".`,
+      question: "Which recent or expected moment would be most useful to examine?",
+      recommendation: "Complete one Review the Moment session first."
+    };
+  }
+
+  const observation = reviews.length
+    ? `${topTrigger} is your most repeated reviewed trigger (${triggerCount} session${triggerCount === 1 ? "" : "s"}). You most often choose to interrupt at ${topInterruption.toLowerCase()} (${interruptionCount}).`
+    : `You have rehearsed ${rehearsals.length} future moment${rehearsals.length === 1 ? "" : "s"} but have not reviewed a real event yet.`;
+  const recommendation = reviews.length && rehearsals.length
+    ? `Rehearse the next ${topTrigger.toLowerCase()} moment using the "${topBranch}" branch, then compare it with what actually happens.`
+    : reviews.length
+      ? `Rehearse a likely ${topTrigger.toLowerCase()} moment before it happens.`
+      : "Review the next real event after it happens so rehearsal and evidence can be compared.";
+  return {
+    headline: "Private coach observation",
+    observation: `${observation}${records.length ? ` Daily practice intensity currently averages ${before} before and ${after} after.` : ""}`,
+    question: `What would make ${topInterruption.toLowerCase()} easier to notice one step sooner?`,
+    recommendation
+  };
+}
+
+function renderPrivateCoach() {
+  if (!state.settings.privateCoachEnabled) return "";
+  const insight = getPrivateCoachInsight();
+  return `
+    <section class="panel coach-card">
+      <div class="action-contract-heading">
+        <div><p class="eyebrow">Private reflection coach</p><h2>${escapeHTML(insight.headline)}</h2></div>
+        <span class="pill gold">Local only</span>
+      </div>
+      <p>${escapeHTML(insight.observation)}</p>
+      <div class="grid two">
+        <div class="mission-preview"><span class="small">Question to consider</span><p>${escapeHTML(insight.question)}</p></div>
+        <div class="mission-preview"><span class="small">Recommended next experiment</span><p>${escapeHTML(insight.recommendation)}</p></div>
+      </div>
+      <p class="small" style="margin-top:14px;">Generated deterministically from data stored in this browser. Nothing is sent to an external AI service.</p>
+    </section>
+  `;
+}
+
+function renderReviewMomentForm() {
+  const journey = state.activeJourney;
+  return `
+    <form id="reviewMomentForm" class="form lab-form">
+      <section class="panel">
+        <p class="eyebrow">Review the Moment</p>
+        <h2>Slow down a real event until the choice becomes visible.</h2>
+        <div class="field"><label for="reviewSituation">What happened, using observable facts?</label><textarea id="reviewSituation" name="situation" required placeholder="Describe what happened without interpreting motives."></textarea></div>
+        <div class="grid two">
+          <div class="field"><label for="reviewTrigger">Trigger</label><input id="reviewTrigger" name="trigger" required value="${escapeHTML(journey.triggers)}"></div>
+          <div class="field"><label for="reviewThought">First automatic thought</label><input id="reviewThought" name="thought" required value="${escapeHTML(journey.thoughts)}"></div>
+          <div class="field"><label for="reviewBody">Body signal</label><select id="reviewBody" name="body" required><option value="">Choose what appeared first</option>${LAB_BODY_OPTIONS.map((item) => `<option>${escapeHTML(item)}</option>`).join("")}<option>Something else</option></select></div>
+          <div class="field"><label for="reviewEmotion">Emotion</label><input id="reviewEmotion" name="emotion" required value="${escapeHTML(journey.emotions)}"></div>
+          <div class="field"><label for="reviewUrge">Urge</label><select id="reviewUrge" name="urge" required><option value="">Choose the automatic urge</option>${LAB_URGE_OPTIONS.map((item) => `<option>${escapeHTML(item)}</option>`).join("")}<option>Something else</option></select></div>
+          <div class="field"><label for="reviewBehavior">What you did</label><input id="reviewBehavior" name="behavior" required value="${escapeHTML(journey.behaviors)}"></div>
+        </div>
+        <div class="field"><label for="reviewResult">What result did the old sequence create?</label><textarea id="reviewResult" name="result" required></textarea></div>
+      </section>
+      <section class="panel">
+        <p class="eyebrow">Choose the earliest useful interruption</p>
+        <div class="branch-grid">
+          ${LAB_INTERRUPT_OPTIONS.map(([id, label, note], index) => `
+            <label class="branch-card">
+              <input type="radio" name="interruptionPoint" value="${escapeHTML(label)}" ${index === 0 ? "required" : ""}>
+              <strong>${escapeHTML(label)}</strong><span>${escapeHTML(note)}</span>
+            </label>
+          `).join("")}
+        </div>
+        <div class="field" style="margin-top:16px;"><label for="reviewNewResponse">What would the new self choose there?</label><textarea id="reviewNewResponse" name="newResponse" required placeholder="${escapeHTML(journey.futureResponse)}"></textarea></div>
+        <button class="button gold" type="submit">Save reviewed moment</button>
+      </section>
+    </form>
+  `;
+}
+
+function scenarioBranches() {
+  const journey = state.activeJourney;
+  return [
+    { id: "old-pattern", title: "Repeat the familiar response", action: journey.behaviors, result: `This protects the familiar state in the short term but reinforces "${journey.primaryPattern}".`, type: "old" },
+    { id: "pause", title: "Pause before choosing", action: "Take one slow breath, name the old pattern, and wait three seconds.", result: "This creates enough space to choose without demanding a perfect response.", type: "bridge" },
+    { id: "new-self", title: "Act as the rehearsed new self", action: journey.futureResponse, result: "This gives the new identity visible evidence and may feel unfamiliar at first.", type: "new" }
+  ];
+}
+
+function renderRehearseMomentForm() {
+  const journey = state.activeJourney;
+  return `
+    <form id="rehearseMomentForm" class="form lab-form">
+      <section class="panel rehearsal-stage">
+        <p class="eyebrow">Rehearse the Moment</p>
+        <h2>Practice before the trigger arrives.</h2>
+        <div class="field"><label for="rehearseScenario">Expected situation</label><textarea id="rehearseScenario" name="scenario" required placeholder="Example: I receive feedback during a meeting."></textarea></div>
+        <div class="scenario-cue">
+          <span class="small">Likely cue from your journey</span>
+          <strong>${escapeHTML(journey.triggers)}</strong>
+          <p>Your familiar thought may be: ${escapeHTML(journey.thoughts)}</p>
+        </div>
+      </section>
+      <section class="panel">
+        <p class="eyebrow">Choose a branch</p>
+        <div class="branch-grid">
+          ${scenarioBranches().map((branch, index) => `
+            <label class="branch-card ${branch.type}">
+              <input type="radio" name="selectedBranch" value="${escapeHTML(branch.title)}" ${index === 0 ? "required" : ""}>
+              <strong>${escapeHTML(branch.title)}</strong>
+              <span>${escapeHTML(branch.action)}</span>
+              <em>${escapeHTML(branch.result)}</em>
+            </label>
+          `).join("")}
+        </div>
+        <div class="grid two" style="margin-top:16px;">
+          <div class="field"><label for="rehearseWords">Exact words or action you will use</label><textarea id="rehearseWords" name="rehearsedResponse" required placeholder="${escapeHTML(journey.futureResponse)}"></textarea></div>
+          <div class="field"><label for="rehearseObstacle">What may pull you back to the old pattern?</label><textarea id="rehearseObstacle" name="obstacle" required></textarea></div>
+        </div>
+        <button class="button gold" type="submit">Save rehearsed moment</button>
+      </section>
+    </form>
+  `;
+}
+
+function renderLabSession(session) {
+  if (session.mode === "review") {
+    return `
+      <article class="entry lab-entry">
+        <div class="meta-row"><span class="pill gold">Reviewed moment</span>${session.journeyTitle ? `<span class="pill">${escapeHTML(session.journeyTitle)}</span>` : ""}<span class="small">${escapeHTML(formatDate(session.createdAt))}</span></div>
+        <h3>${escapeHTML(session.situation)}</h3>
+        <p><strong>Sequence:</strong> ${escapeHTML(session.trigger)} → ${escapeHTML(session.thought)} → ${escapeHTML(session.body)} → ${escapeHTML(session.emotion)} → ${escapeHTML(session.urge)} → ${escapeHTML(session.behavior)}</p>
+        <p><strong>Earliest interruption:</strong> ${escapeHTML(session.interruptionPoint)}</p>
+        <p><strong>New response:</strong> ${escapeHTML(session.newResponse)}</p>
+      </article>
+    `;
+  }
+  return `
+    <article class="entry lab-entry">
+      <div class="meta-row"><span class="pill gold">Rehearsed moment</span>${session.journeyTitle ? `<span class="pill">${escapeHTML(session.journeyTitle)}</span>` : ""}<span class="small">${escapeHTML(formatDate(session.createdAt))}</span></div>
+      <h3>${escapeHTML(session.scenario)}</h3>
+      <p><strong>Chosen branch:</strong> ${escapeHTML(session.selectedBranch)}</p>
+      <p><strong>Rehearsed response:</strong> ${escapeHTML(session.rehearsedResponse)}</p>
+      <p><strong>Expected obstacle:</strong> ${escapeHTML(session.obstacle)}</p>
+    </article>
+  `;
+}
+
+function renderPatternLab() {
+  const sessions = getLabSessions();
+  const activeMode = state.settings.labMode || "review";
+  return `
+    <header class="topbar">
+      <div><p class="eyebrow">Pattern Lab</p><h1>Study the old sequence. Rehearse the new one.</h1><p class="lead">Use real and expected moments to specialize the practice around your actual triggers, body signals, urges, and choices.</p></div>
+      <div class="card stat"><span class="small">Lab sessions</span><strong>${sessions.length}</strong><span class="small">${getLabSessions("review").length} reviewed · ${getLabSessions("rehearse").length} rehearsed</span></div>
+    </header>
+    ${renderMomentumStrip()}
+    ${renderPrivateCoach()}
+    <section class="lab-mode-switch">
+      <button class="lab-mode-button ${activeMode === "review" ? "active" : ""}" type="button" data-action="lab-mode" data-mode="review"><strong>Review the Moment</strong><span>Slow down something that already happened.</span></button>
+      <button class="lab-mode-button ${activeMode === "rehearse" ? "active" : ""}" type="button" data-action="lab-mode" data-mode="rehearse"><strong>Rehearse the Moment</strong><span>Practice a likely situation before it happens.</span></button>
+    </section>
+    ${activeMode === "review" ? renderReviewMomentForm() : renderRehearseMomentForm()}
+    <section class="panel">
+      <h2>Preserved Pattern Lab sessions</h2>
+      ${sessions.length ? sessions.slice(0, 12).map(renderLabSession).join("") : `<div class="empty">Your reviewed and rehearsed moments will remain here for comparison.</div>`}
+    </section>
+  `;
+}
+
 function renderJournal() {
   const query = state.settings.journalQuery.trim().toLowerCase();
   const journeys = [state.activeJourney, ...state.archives].filter(Boolean);
@@ -977,11 +1188,12 @@ function renderJournal() {
     .sort((a, b) => new Date(b.review.completedAt) - new Date(a.review.completedAt));
   const foundations = journeys.flatMap((journey) => (journey.foundationRecords || []).map((record) => ({ journey, record })))
     .sort((a, b) => new Date(b.record.completedAt) - new Date(a.record.completedAt));
+  const labSessions = getLabSessions("", "").filter((session) => !query || JSON.stringify(session).toLowerCase().includes(query));
 
   return `
     <header class="topbar">
       <div><p class="eyebrow">Preserved entries</p><h1>Return to what you noticed.</h1><p class="lead">Search declarations, triggers, reflections, and evidence across every cycle and completed journey.</p></div>
-      <div class="card stat"><span class="small">Preserved entries</span><strong>${entries.length + foundations.length}</strong><span class="small">${foundations.length} foundations · ${reviews.length} weekly reviews</span></div>
+      <div class="card stat"><span class="small">Preserved entries</span><strong>${entries.length + foundations.length + labSessions.length}</strong><span class="small">${foundations.length} foundations · ${labSessions.length} lab sessions</span></div>
     </header>
     <section class="panel">
       <form id="journalSearchForm" class="actions">
@@ -989,6 +1201,10 @@ function renderJournal() {
         <button class="button secondary" type="submit">Search</button>
         <button class="button secondary" type="button" data-action="clear-search">Clear</button>
       </form>
+    </section>
+    <section class="panel">
+      <h2>Pattern Lab sessions</h2>
+      ${labSessions.length ? labSessions.map(renderLabSession).join("") : `<div class="empty">Pattern Lab sessions appear here after you review or rehearse a moment.</div>`}
     </section>
     <section class="panel">
       <h2>Foundation entries</h2>
@@ -1174,6 +1390,14 @@ function renderSettings() {
             <div class="field"><label for="eveningReminder">Evening</label><input id="eveningReminder" name="eveningReminder" type="time" value="${escapeHTML(settings.eveningReminder)}"></div>
           </div>
           <button class="button" type="submit">Save preferences</button>
+        </form>
+      </article>
+      <article class="panel">
+        <h2>Private reflection coach</h2>
+        <div class="notice"><strong>Local-only coaching.</strong><br>The coach analyzes saved Pattern Lab sessions and practice evidence using fixed rules in this app. It does not send journal content or personal data anywhere.</div>
+        <form id="coachSettingsForm" style="margin-top:16px;">
+          <label class="check-row"><input type="checkbox" name="privateCoachEnabled" ${settings.privateCoachEnabled ? "checked" : ""}> Show personalized local coach observations in Pattern Lab</label>
+          <button class="button secondary" type="submit" style="margin-top:14px;">Save coach setting</button>
         </form>
       </article>
       <article class="panel">
@@ -1481,6 +1705,56 @@ function handleSettings(form) {
   showToast("Practice preferences saved.");
 }
 
+function handleCoachSettings(form) {
+  const data = new FormData(form);
+  state.settings.privateCoachEnabled = data.get("privateCoachEnabled") === "on";
+  saveState();
+  render();
+  showToast(state.settings.privateCoachEnabled ? "Private local coach enabled." : "Private local coach hidden.");
+}
+
+function handleReviewMoment(form) {
+  const data = new FormData(form);
+  state.patternLab.push({
+    id: createId(),
+    journeyId: state.activeJourney.id,
+    journeyTitle: state.activeJourney.title,
+    mode: "review",
+    situation: String(data.get("situation") || "").trim(),
+    trigger: String(data.get("trigger") || "").trim(),
+    thought: String(data.get("thought") || "").trim(),
+    body: String(data.get("body") || "").trim(),
+    emotion: String(data.get("emotion") || "").trim(),
+    urge: String(data.get("urge") || "").trim(),
+    behavior: String(data.get("behavior") || "").trim(),
+    result: String(data.get("result") || "").trim(),
+    interruptionPoint: String(data.get("interruptionPoint") || "").trim(),
+    newResponse: String(data.get("newResponse") || "").trim(),
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  render();
+  showToast("Moment reviewed and preserved. The private coach updated.");
+}
+
+function handleRehearseMoment(form) {
+  const data = new FormData(form);
+  state.patternLab.push({
+    id: createId(),
+    journeyId: state.activeJourney.id,
+    journeyTitle: state.activeJourney.title,
+    mode: "rehearse",
+    scenario: String(data.get("scenario") || "").trim(),
+    selectedBranch: String(data.get("selectedBranch") || "").trim(),
+    rehearsedResponse: String(data.get("rehearsedResponse") || "").trim(),
+    obstacle: String(data.get("obstacle") || "").trim(),
+    createdAt: new Date().toISOString()
+  });
+  saveState();
+  render();
+  showToast("Future moment rehearsed and preserved. The private coach updated.");
+}
+
 function handleProgression(form) {
   const data = new FormData(form);
   state.settings.flexibleProgression = data.get("flexibleProgression") === "on";
@@ -1622,7 +1896,12 @@ async function importEncryptedBackup(file, password) {
   );
   const restored = JSON.parse(new TextDecoder().decode(decrypted));
   if (restored.version !== 1 || !restored.settings || !Array.isArray(restored.archives)) throw new Error("Backup data is invalid.");
-  state = restored;
+  state = {
+    ...structuredClone(DEFAULT_STATE),
+    ...restored,
+    settings: { ...DEFAULT_STATE.settings, ...(restored.settings || {}) },
+    patternLab: Array.isArray(restored.patternLab) ? restored.patternLab : []
+  };
   saveState();
   resetPracticeSession();
   activeView = state.activeJourney ? "today" : "journey";
@@ -1640,6 +1919,9 @@ app.addEventListener("submit", async (event) => {
     if (form.id === "dailyPracticeForm") handleDailyPractice(form);
     if (form.id === "weeklyReviewForm") handleWeeklyReview(form, event.submitter);
     if (form.id === "settingsForm") handleSettings(form);
+    if (form.id === "coachSettingsForm") handleCoachSettings(form);
+    if (form.id === "reviewMomentForm") handleReviewMoment(form);
+    if (form.id === "rehearseMomentForm") handleRehearseMoment(form);
     if (form.id === "progressionForm") handleProgression(form);
     if (form.id === "editPreparationForm") savePreparation(form);
     if (form.id === "journalSearchForm") {
@@ -1680,6 +1962,11 @@ app.addEventListener("click", (event) => {
   if (action === "jump-day") jumpToDay(element);
   if (action === "view-record") viewRecord(element);
   if (action === "edit-preparation") editPreparation();
+  if (action === "lab-mode") {
+    state.settings.labMode = element.dataset.mode === "rehearse" ? "rehearse" : "review";
+    saveState();
+    render();
+  }
   if (action === "clear-search") {
     state.settings.journalQuery = "";
     saveState();

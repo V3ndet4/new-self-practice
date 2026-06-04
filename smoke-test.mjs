@@ -132,6 +132,39 @@ try {
   assert(await evaluate("document.querySelector('h1')?.textContent") === "Prepare the space", "Week One did not unlock after Chapter 9.");
 
   await evaluate(`(() => {
+    [...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "lab").click();
+    const form = document.querySelector("#reviewMomentForm");
+    form.elements.situation.value = "I received unexpected feedback.";
+    form.elements.trigger.value = "unexpected feedback";
+    form.elements.thought.value = "I must defend myself";
+    form.elements.body.value = "Tight chest";
+    form.elements.emotion.value = "tension";
+    form.elements.urge.value = "Defend myself";
+    form.elements.behavior.value = "arguing";
+    form.elements.result.value = "The conversation became tense.";
+    form.elements.interruptionPoint.value = "At the body signal";
+    form.elements.newResponse.value = "pause and listen";
+    form.requestSubmit();
+  })()`);
+  await wait(100);
+  assert(await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).patternLab.length") === 1, "Reviewed Pattern Lab moment was not preserved.");
+
+  await evaluate(`(() => {
+    document.querySelector("[data-action='lab-mode'][data-mode='rehearse']").click();
+    const form = document.querySelector("#rehearseMomentForm");
+    form.elements.scenario.value = "I expect feedback in tomorrow's meeting.";
+    form.elements.selectedBranch.value = "Pause before choosing";
+    form.elements.rehearsedResponse.value = "Take one breath and ask a clarifying question.";
+    form.elements.obstacle.value = "The urge to defend myself.";
+    form.requestSubmit();
+  })()`);
+  await wait(100);
+  const labState = await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).patternLab");
+  assert(labState.length === 2 && labState.some((session) => session.mode === "rehearse"), "Rehearsed Pattern Lab moment was not preserved.");
+  assert((await evaluate("document.body.textContent")).includes("Private coach observation"), "Private local coach did not personalize after Pattern Lab sessions.");
+
+  await evaluate(`(() => {
+    [...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "today").click();
     document.querySelector("#reflection").value = "This should remain blocked.";
     document.querySelector("#dailyActionCue").value = "feedback";
     document.querySelector("#dailyActionResponse").value = "pause and listen";
@@ -203,7 +236,7 @@ try {
   assert(afterJump.currentWeek === 4 && afterJump.currentDay === 7, "Flexible Progression did not allow an explicit future-day jump.");
   assert(exceptions.length === 0, `Browser exceptions: ${exceptions.join("; ")}`);
 
-  console.log("SMOKE_TEST_OK: guided setup, ordered Foundations, precise One Moves, enforced follow-through, meditation gate, 7-day sequence, weekly repeat, preservation, and Settings override/jump");
+  console.log("SMOKE_TEST_OK: guided setup, ordered Foundations, Pattern Lab review/rehearse, private local coach, precise One Moves, enforced follow-through, meditation gate, progression, and preservation");
 } finally {
   socket.close();
   edge.kill();

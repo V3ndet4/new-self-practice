@@ -1,9 +1,9 @@
-const CACHE_NAME = "new-self-practice-v1.0-action-momentum";
+const CACHE_NAME = "new-self-practice-v1.4-pattern-lab-coach";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.0",
-  "./app.js?v=1.0",
+  "./styles.css?v=1.4",
+  "./app.js?v=1.4",
   "./manifest.webmanifest",
   "./icon.svg",
   "./assets/sunset-beach.png"
