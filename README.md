@@ -2,7 +2,7 @@
 
 A private, local-first companion for practicing the four-week process in *Breaking the Habit of Being Yourself*.
 
-Current release: `v1.1`
+Current release: `v1.2`
 
 ## Product rules
 
@@ -20,6 +20,7 @@ Current release: `v1.1`
 - An optional deterministic private reflection coach specializes observations from local Pattern Lab sessions without sending data anywhere.
 - The v1.0 Island Journey UI replaces the dashboard/sidebar layout with a map-first practice world and sticky compass navigation.
 - The v1.1 Personal Journey Map shows the current island location, current practice point, completed path, and next unlock.
+- The v1.2 Daily Practice Cards turn the daily session into guided Notice, Declare, Practice, and Act cards instead of a long form.
 
 The app uses original companion exercises and page references. It does not reproduce the book's long-form text or guided scripts.
 

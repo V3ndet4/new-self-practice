@@ -1,9 +1,9 @@
-const CACHE_NAME = "new-self-practice-v1.1-personal-journey-map";
+const CACHE_NAME = "new-self-practice-v1.2-daily-practice-cards";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=1.1",
-  "./app.js?v=1.1",
+  "./styles.css?v=1.2",
+  "./app.js?v=1.2",
   "./manifest.webmanifest",
   "./icon.svg",
   "./assets/sunset-beach.png"

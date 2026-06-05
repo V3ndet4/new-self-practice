@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v1.1";
+const APP_VERSION = "v1.2";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -799,71 +799,90 @@ function renderToday() {
       <strong>${escapeHTML(practiceSpark(journey.currentWeek * 10 + journey.currentDay))}</strong>
     </section>
 
-    <section class="focus-flow" aria-label="Today's practice flow">
-      <span><strong>1</strong> Declare</span>
-      <span><strong>2</strong> Meditate</span>
-      <span><strong>3</strong> Reflect</span>
-      <span><strong>4</strong> Choose one move</span>
+    <section class="focus-flow daily-card-flow" aria-label="Today's practice flow">
+      <span><strong>1</strong> Notice</span>
+      <span><strong>2</strong> Declare</span>
+      <span><strong>3</strong> Practice</span>
+      <span><strong>4</strong> Act</span>
     </section>
 
-    <section class="panel">
+    <section class="panel daily-session-intro">
       <div class="meta-row"><span class="pill gold">${escapeHTML(week.shortTitle)}</span><span class="pill">${escapeHTML(week.page)}</span></div>
       <h2 style="margin-top:12px;">Why this practice matters</h2>
       <p>${escapeHTML(week.why)}</p>
     </section>
 
-    <form id="dailyPracticeForm" class="form">
-      <section class="panel">
-        <p class="eyebrow">Step 1 of 4 · Change Declaration</p>
-        <h2>Name what you are ready to change today.</h2>
-        <div class="field">
-          <label for="declaration">Complete the declaration</label>
-          <input id="declaration" name="declaration" list="declarationSuggestions" required maxlength="180" value="${escapeHTML(defaultDeclaration)}">
-          <datalist id="declarationSuggestions">${prior.map((item) => `<option value="${escapeHTML(item)}"></option>`).join("")}</datalist>
-        </div>
-        <div class="declaration"><p>${DECLARATION_PREFIX} <strong id="declarationPreview">${escapeHTML(defaultDeclaration || "______")}</strong>, ${DECLARATION_SUFFIX}</p></div>
-        <div class="field" style="margin-top:16px;">
-          <label for="intensityBefore">How strong does this pattern feel before practice? <span id="beforeValue">5</span>/10</label>
-          <input id="intensityBefore" name="intensityBefore" type="range" min="1" max="10" value="5">
+    <form id="dailyPracticeForm" class="daily-card-session">
+      <section class="practice-card notice-card">
+        <div class="practice-card-marker">1</div>
+        <div class="practice-card-body">
+          <p class="eyebrow">Notice · old pattern signal</p>
+          <h2>Start with the pattern, not the whole problem.</h2>
+          <p>Today you are watching for <strong>${escapeHTML(journey.primaryPattern)}</strong>. Keep the target small enough to catch in real life.</p>
+          <div class="signal-grid">
+            <article><span class="small">Likely trigger</span><strong>${escapeHTML(journey.triggers)}</strong></article>
+            <article><span class="small">Familiar thought</span><strong>${escapeHTML(journey.thoughts)}</strong></article>
+            <article><span class="small">Body/emotion</span><strong>${escapeHTML(journey.emotions)}</strong></article>
+          </div>
+          <div class="field intensity-field">
+            <label for="intensityBefore">Before practice intensity <span id="beforeValue">5</span>/10</label>
+            <input id="intensityBefore" name="intensityBefore" type="range" min="1" max="10" value="5">
+          </div>
         </div>
       </section>
 
-      <section class="panel">
-        <p class="eyebrow">Step 2 of 4 · Meditation</p>
-        <h2>${state.settings.duration}-minute ${state.settings.spokenGuidance ? "guided" : "silent"} practice</h2>
-        <div class="grid two">
-          <div>
-            <ol class="step-list">${week.practiceSteps.map((step) => `<li>${escapeHTML(step)}</li>`).join("")}</ol>
-            <div class="notice" style="margin-top:16px;">Use the referenced book section for the full source practice. Guidance here is an original companion summary.</div>
+      <section class="practice-card declaration-card">
+        <div class="practice-card-marker">2</div>
+        <div class="practice-card-body">
+          <p class="eyebrow">Declare · change the state</p>
+          <h2>Name what you are ready to change today.</h2>
+          <div class="field">
+            <label for="declaration">Complete the declaration</label>
+            <input id="declaration" name="declaration" list="declarationSuggestions" required maxlength="180" value="${escapeHTML(defaultDeclaration)}">
+            <datalist id="declarationSuggestions">${prior.map((item) => `<option value="${escapeHTML(item)}"></option>`).join("")}</datalist>
           </div>
-          <div class="card timer">
+          <div class="declaration"><p>${DECLARATION_PREFIX} <strong id="declarationPreview">${escapeHTML(defaultDeclaration || "______")}</strong>, ${DECLARATION_SUFFIX}</p></div>
+        </div>
+      </section>
+
+      <section class="practice-card meditation-card">
+        <div class="practice-card-marker">3</div>
+        <div class="practice-card-body">
+          <p class="eyebrow">Practice · meditation rep</p>
+          <h2>${state.settings.duration}-minute ${state.settings.spokenGuidance ? "guided" : "silent"} practice</h2>
+          <div class="practice-card-grid">
             <div>
-              <div class="timer-time" id="timerTime">${formatSeconds(practiceSession.remaining)}</div>
-              <p class="small" id="timerStatus">${practiceSession.complete ? "Practice complete" : practiceSession.running ? "Practice in progress" : "Ready when you are"}</p>
-              <div class="actions" style="justify-content:center;">
-                <button class="button" type="button" data-action="timer-start">${practiceSession.started ? "Resume" : "Start practice"}</button>
-                <button class="button secondary" type="button" data-action="timer-pause">Pause</button>
-                <button class="button secondary" type="button" data-action="timer-finish" ${practiceSession.started ? "" : "disabled"}>Finish practice</button>
+              <ol class="step-list">${week.practiceSteps.map((step) => `<li>${escapeHTML(step)}</li>`).join("")}</ol>
+              <div class="notice" style="margin-top:16px;">Use the referenced book section for the full source practice. Guidance here is an original companion summary.</div>
+            </div>
+            <div class="card timer">
+              <div>
+                <div class="timer-time" id="timerTime">${formatSeconds(practiceSession.remaining)}</div>
+                <p class="small" id="timerStatus">${practiceSession.complete ? "Practice complete" : practiceSession.running ? "Practice in progress" : "Ready when you are"}</p>
+                <div class="actions" style="justify-content:center;">
+                  <button class="button" type="button" data-action="timer-start">${practiceSession.started ? "Resume" : "Start practice"}</button>
+                  <button class="button secondary" type="button" data-action="timer-pause">Pause</button>
+                  <button class="button secondary" type="button" data-action="timer-finish" ${practiceSession.started ? "" : "disabled"}>Finish practice</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
-        <p class="eyebrow">Step 3 of 4 · Reflection</p>
-        <h2>${escapeHTML(daily[1])}</h2>
-        <div class="field"><label for="reflection">Short reflection</label><textarea id="reflection" name="reflection" required placeholder="Write what you noticed without judging it."></textarea></div>
-        <div class="field">
-          <label for="intensityAfter">How strong does the pattern feel after practice? <span id="afterValue">5</span>/10</label>
-          <input id="intensityAfter" name="intensityAfter" type="range" min="1" max="10" value="5">
+      <section class="practice-card reflection-card">
+        <div class="practice-card-marker">4</div>
+        <div class="practice-card-body">
+          <p class="eyebrow">Reflect · choose one move</p>
+          <h2>${escapeHTML(daily[1])}</h2>
+          <div class="field"><label for="reflection">Short reflection</label><textarea id="reflection" name="reflection" required placeholder="Write what you noticed without judging it."></textarea></div>
+          <div class="field intensity-field">
+            <label for="intensityAfter">After practice intensity <span id="afterValue">5</span>/10</label>
+            <input id="intensityAfter" name="intensityAfter" type="range" min="1" max="10" value="5">
+          </div>
+          ${renderActionContract("dailyAction", daily[2], { cue: journey.triggers, response: journey.futureResponse })}
+          <div class="field" style="margin-top:18px;"><label for="evidence">Optional proof if you already tried it</label><textarea id="evidence" name="evidence" placeholder="What happened when you chose differently?"></textarea></div>
         </div>
-      </section>
-
-      <section class="panel">
-        <p class="eyebrow">Step 4 of 4 · Act</p>
-        ${renderActionContract("dailyAction", daily[2], { cue: journey.triggers, response: journey.futureResponse })}
-        <div class="field" style="margin-top:18px;"><label for="evidence">Optional proof if you already tried it</label><textarea id="evidence" name="evidence" placeholder="What happened when you chose differently?"></textarea></div>
       </section>
 
       <button class="button gold completion-button" type="submit">Complete Day ${journey.currentDay} and add 60 glow</button>

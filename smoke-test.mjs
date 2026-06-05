@@ -181,6 +181,9 @@ try {
     document.querySelector("#dailyPracticeForm").requestSubmit();
   })()`);
   await wait(100);
+  assert(await evaluate("document.querySelectorAll('.practice-card').length") === 4, "Daily Practice Cards did not render.");
+  assert((await evaluate("document.body.textContent")).includes("Notice · old pattern signal"), "Notice card did not render.");
+  assert((await evaluate("document.body.textContent")).includes("Practice · meditation rep"), "Practice card did not render.");
   assert((await evaluate("document.querySelector('.toast')?.textContent")).includes("Complete the meditation"), "Daily completion was not blocked before meditation.");
 
   for (let day = 1; day <= 7; day += 1) {

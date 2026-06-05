@@ -185,6 +185,12 @@ p, li { line-height: 1.6; }
 .focus-flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }
 .focus-flow span { display: flex; gap: 8px; align-items: center; padding: 10px 12px; color: var(--muted); background: rgba(39, 40, 59, 0.5); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(16px); }
 .focus-flow strong { display: grid; place-items: center; min-width: 26px; height: 26px; color: #3b3648; background: var(--gold); border-radius: 50%; }
+.daily-card-flow span {
+  min-height: 58px;
+  background:
+    linear-gradient(135deg, rgba(255, 208, 157, 0.12), rgba(184, 221, 214, 0.08)),
+    rgba(39, 40, 59, 0.56);
+}
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .button {
   min-height: 44px;
@@ -201,6 +207,7 @@ p, li { line-height: 1.6; }
 .button.danger { color: #fff; background: rgba(239, 137, 127, 0.18); border: 1px solid rgba(239, 137, 127, 0.4); }
 .button[disabled] { cursor: not-allowed; opacity: 0.45; transform: none; }
 .form { display: grid; gap: 18px; }
+.daily-card-session { display: grid; gap: 18px; }
 .field { display: grid; gap: 7px; }
 label, legend { color: var(--ink); font-weight: 650; }
 input, textarea, select {
@@ -223,6 +230,81 @@ input:focus, textarea:focus, select:focus { border-color: var(--sage); box-shado
   border-radius: 18px;
 }
 .declaration p { margin-bottom: 0; font-size: 1.08rem; font-weight: 650; }
+.daily-session-intro {
+  border-color: rgba(255, 208, 157, 0.28);
+}
+.practice-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 18px;
+  padding: clamp(18px, 3vw, 28px);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 18%, rgba(255, 208, 157, 0.16), transparent 26%),
+    linear-gradient(145deg, rgba(44, 45, 65, 0.82), rgba(61, 49, 68, 0.76));
+  border: 1px solid rgba(255, 238, 225, 0.22);
+  border-radius: 30px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px) saturate(118%);
+}
+.practice-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0.06), transparent 32% 68%, rgba(184, 221, 214, 0.07));
+  content: "";
+}
+.practice-card > * {
+  position: relative;
+  z-index: 1;
+}
+.practice-card-marker {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  color: #3b3648;
+  font-size: 1.2rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--gold), var(--sage));
+  border-radius: 50%;
+  box-shadow: 0 14px 35px rgba(255, 208, 157, 0.18);
+}
+.practice-card-body {
+  display: grid;
+  gap: 14px;
+}
+.practice-card-body > h2,
+.practice-card-body > p {
+  margin-bottom: 0;
+}
+.practice-card-grid,
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.signal-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.signal-grid article {
+  padding: 14px;
+  background: rgba(29, 31, 49, 0.46);
+  border: 1px solid rgba(255, 238, 225, 0.18);
+  border-radius: 18px;
+}
+.signal-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--gold);
+}
+.intensity-field {
+  padding: 14px;
+  background: rgba(29, 31, 49, 0.34);
+  border: 1px solid rgba(255, 238, 225, 0.16);
+  border-radius: 18px;
+}
 .step-list, .plain-list { margin: 0; padding-left: 20px; }
 .step-list li, .plain-list li { margin-bottom: 8px; color: var(--muted); }
 .progress-track { height: 8px; overflow: hidden; background: rgba(255, 255, 255, 0.08); border-radius: 999px; }
@@ -334,7 +416,7 @@ button.day-dot { width: 100%; padding: 0; }
 }
 .noscript { width: min(640px, calc(100% - 32px)); margin: 14vh auto; padding: 26px; background: var(--panel); border-radius: 20px; }
 
-/* v1.1 Island Journey UI */
+/* v1.2 Island Journey UI */
 .island-shell {
   min-height: 100vh;
   padding: 22px;
@@ -656,7 +738,7 @@ button.day-dot { width: 100%; padding: 0; }
   .nav { display: flex; gap: 6px; overflow-x: auto; }
   .nav-button { justify-content: center; min-width: 88px; padding: 10px; text-align: center; }
   .main { padding: 20px 16px 104px; }
-  .topbar, .grid.two, .grid.three, .week-map, .foundation-map, .momentum-strip, .focus-flow, .milestone-grid, .branch-grid, .journey-compass-panel { grid-template-columns: 1fr; }
+  .topbar, .grid.two, .grid.three, .week-map, .foundation-map, .momentum-strip, .focus-flow, .milestone-grid, .branch-grid, .journey-compass-panel, .practice-card-grid, .signal-grid { grid-template-columns: 1fr; }
   .momentum-strip article { border-right: 0; border-bottom: 1px solid var(--line); }
   .momentum-strip article:last-child { border-bottom: 0; }
   .hero { min-height: 390px; }
@@ -668,6 +750,8 @@ button.day-dot { width: 100%; padding: 0; }
   .compass-button { min-width: 76px; }
   .island-map { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; }
   .island-location { min-height: 120px; transform: none; }
+  .practice-card { grid-template-columns: 1fr; }
+  .practice-card-marker { width: 46px; height: 46px; }
 }
 
 @media (max-width: 560px) {
