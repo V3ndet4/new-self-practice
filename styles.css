@@ -334,7 +334,7 @@ button.day-dot { width: 100%; padding: 0; }
 }
 .noscript { width: min(640px, calc(100% - 32px)); margin: 14vh auto; padding: 26px; background: var(--panel); border-radius: 20px; }
 
-/* v1.0 Island Journey UI */
+/* v1.1 Island Journey UI */
 .island-shell {
   min-height: 100vh;
   padding: 22px;
@@ -464,13 +464,13 @@ button.day-dot { width: 100%; padding: 0; }
   max-width: 850px;
 }
 
-.island-map {
+.journey-compass-panel {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: 18px;
   margin: 18px 0;
-  padding: 28px;
+  padding: clamp(18px, 3vw, 28px);
   overflow: hidden;
   background:
     radial-gradient(circle at 18% 20%, rgba(184, 221, 214, 0.13), transparent 20%),
@@ -482,7 +482,7 @@ button.day-dot { width: 100%; padding: 0; }
   backdrop-filter: blur(22px) saturate(120%);
 }
 
-.island-map::before {
+.journey-compass-panel::before {
   position: absolute;
   inset: 18px;
   pointer-events: none;
@@ -491,6 +491,61 @@ button.day-dot { width: 100%; padding: 0; }
     radial-gradient(ellipse at 55% 65%, rgba(255, 255, 255, 0.06), transparent 52%);
   border-radius: 26px;
   content: "";
+}
+
+.journey-compass-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.journey-compass-copy h2 {
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.current-objective {
+  display: grid;
+  gap: 4px;
+  margin-top: 18px;
+  padding: 16px;
+  color: #3a3547;
+  background: linear-gradient(135deg, var(--sage), var(--gold));
+  border-radius: 22px;
+}
+
+.current-objective .small {
+  color: rgba(58, 53, 71, 0.78);
+}
+
+.journey-compass-stats {
+  display: grid;
+  gap: 12px;
+}
+
+.journey-compass-stats article {
+  padding: 18px;
+  background: rgba(39, 39, 59, 0.66);
+  border: 1px solid rgba(255, 238, 225, 0.18);
+  border-radius: 24px;
+}
+
+.journey-compass-stats strong {
+  display: block;
+  margin: 5px 0;
+  color: var(--gold);
+  font-size: 1.45rem;
+}
+
+.journey-compass-stats p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.island-map {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .island-location {
@@ -513,6 +568,15 @@ button.day-dot { width: 100%; padding: 0; }
   box-shadow: 0 18px 45px rgba(255, 204, 153, 0.14);
 }
 
+.island-location.current::after {
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  border: 1px solid rgba(255, 208, 157, 0.38);
+  border-radius: inherit;
+  content: "";
+}
+
 .island-location.complete {
   border-color: rgba(184, 221, 214, 0.45);
 }
@@ -530,6 +594,36 @@ button.day-dot { width: 100%; padding: 0; }
   font-weight: 900;
   background: linear-gradient(135deg, var(--gold), var(--sage));
   border-radius: 50%;
+}
+
+.location-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.location-status {
+  padding: 3px 8px;
+  color: var(--sage);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(184, 221, 214, 0.11);
+  border: 1px solid rgba(184, 221, 214, 0.2);
+  border-radius: 999px;
+}
+
+.island-location.current .location-status {
+  color: #3a3547;
+  background: var(--gold);
+  border-color: transparent;
+}
+
+.island-location.locked .location-status {
+  color: var(--muted);
 }
 
 .island-location h3,
@@ -562,7 +656,7 @@ button.day-dot { width: 100%; padding: 0; }
   .nav { display: flex; gap: 6px; overflow-x: auto; }
   .nav-button { justify-content: center; min-width: 88px; padding: 10px; text-align: center; }
   .main { padding: 20px 16px 104px; }
-  .topbar, .grid.two, .grid.three, .week-map, .foundation-map, .momentum-strip, .focus-flow, .milestone-grid, .branch-grid { grid-template-columns: 1fr; }
+  .topbar, .grid.two, .grid.three, .week-map, .foundation-map, .momentum-strip, .focus-flow, .milestone-grid, .branch-grid, .journey-compass-panel { grid-template-columns: 1fr; }
   .momentum-strip article { border-right: 0; border-bottom: 1px solid var(--line); }
   .momentum-strip article:last-child { border-bottom: 0; }
   .hero { min-height: 390px; }

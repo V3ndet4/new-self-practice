@@ -101,6 +101,11 @@ try {
   await wait(250);
   assert(await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney.currentDay") === 1, "Preparation did not create the journey.");
   assert(await evaluate("document.querySelector('h1')?.textContent") === "The Habit of Being Yourself", "The journey skipped the Introduction.");
+  await evaluate(`[...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "journey").click()`);
+  await wait(100);
+  assert((await evaluate("document.body.textContent")).includes("You are here: The Shore"), "Personal Journey Map did not show the current Foundation location.");
+  await evaluate(`[...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "today").click()`);
+  await wait(100);
 
   for (let lesson = 1; lesson <= 10; lesson += 1) {
     await evaluate(`(() => {
@@ -130,6 +135,9 @@ try {
   assert(afterFoundations.foundationRecords.every((record) => record.actionContract?.proof), "Foundation action contracts were not preserved.");
   assert(afterFoundations.foundationRecords.every((record) => record.actionFollowUp?.outcome), "Foundation One Move follow-through was not preserved.");
   assert(await evaluate("document.querySelector('h1')?.textContent") === "Prepare the space", "Week One did not unlock after Chapter 9.");
+  await evaluate(`[...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "journey").click()`);
+  await wait(100);
+  assert((await evaluate("document.body.textContent")).includes("You are here: Induction Bay"), "Personal Journey Map did not show the current Week One location.");
 
   await evaluate(`(() => {
     [...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "lab").click();

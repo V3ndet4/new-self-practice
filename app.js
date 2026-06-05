@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v1.0";
+const APP_VERSION = "v1.1";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -909,22 +909,25 @@ function renderWeeklyReview() {
 }
 
 function getIslandLocations(journey) {
+  const foundationTitles = [
+    "The Shore",
+    "Field of Possibility",
+    "Environment Cave",
+    "Body Tide",
+    "Time Dunes",
+    "Survival Storm",
+    "Three-Brain Bridge",
+    "Gap Lagoon",
+    "Meditation Cove",
+    "Preparation Camp"
+  ];
   const foundationLocations = FOUNDATION_CONTENT.map((lesson, index) => ({
     id: lesson.id,
     label: lesson.label,
-    title: [
-      "The Shore",
-      "Field of Possibility",
-      "Environment Cave",
-      "Body Tide",
-      "Time Dunes",
-      "Survival Storm",
-      "Three-Brain Bridge",
-      "Gap Lagoon",
-      "Meditation Cove",
-      "Preparation Camp"
-    ][index],
+    title: foundationTitles[index],
     subtitle: lesson.title,
+    why: lesson.why,
+    objective: lesson.action,
     status: journey.foundationRecords.some((record) => record.id === lesson.id)
       ? "complete"
       : !journey.foundationsComplete && index === journey.currentFoundationIndex
@@ -937,6 +940,8 @@ function getIslandLocations(journey) {
     label: `Week ${week.week}`,
     title: ["Induction Bay", "Pruning Garden", "Redirect Ridge", "New Self Horizon"][week.week - 1],
     subtitle: week.shortTitle,
+    why: week.why,
+    objective: week.daily[Math.max(0, Math.min(6, (journey.currentDay || 1) - 1))]?.[2] || week.focus,
     status: !journey.foundationsComplete
       ? "locked"
       : week.week < journey.currentWeek
@@ -949,19 +954,61 @@ function getIslandLocations(journey) {
   return [...foundationLocations, ...weekLocations];
 }
 
+function getCurrentIslandLocation(journey) {
+  const locations = getIslandLocations(journey);
+  const current = locations.find((location) => location.status === "current");
+  if (current) return current;
+  for (let index = locations.length - 1; index >= 0; index -= 1) {
+    if (locations[index].status === "complete") return locations[index];
+  }
+  return locations[0];
+}
+
 function renderIslandMap(journey) {
+  const locations = getIslandLocations(journey);
+  const current = getCurrentIslandLocation(journey);
+  const currentIndex = Math.max(0, locations.findIndex((location) => location.id === current.id));
+  const nextLocked = locations.slice(currentIndex + 1).find((location) => location.status === "locked");
+  const completedCount = locations.filter((location) => location.status === "complete").length;
+  const mapProgress = Math.round((completedCount / locations.length) * 100);
   return `
-    <section class="island-map" aria-label="Island journey map">
-      ${getIslandLocations(journey).map((location, index) => `
-        <article class="island-location ${location.status} ${location.type}" style="--i:${index}">
-          <div class="location-orb">${location.status === "complete" ? "✓" : index + 1}</div>
-          <div>
-            <span class="small">${escapeHTML(location.label)}</span>
-            <h3>${escapeHTML(location.title)}</h3>
-            <p>${escapeHTML(location.subtitle)}</p>
-          </div>
+    <section class="journey-compass-panel" aria-label="Personal journey map">
+      <div class="journey-compass-copy">
+        <p class="eyebrow">Personal Journey Map</p>
+        <h2>You are here: ${escapeHTML(current.title)}</h2>
+        <p>${escapeHTML(current.why)}</p>
+        <div class="current-objective">
+          <span class="small">Current practice point</span>
+          <strong>${escapeHTML(current.objective)}</strong>
+        </div>
+      </div>
+      <div class="journey-compass-stats">
+        <article>
+          <span class="small">Island path</span>
+          <strong>${completedCount}/${locations.length}</strong>
+          <div class="progress-track"><div class="progress-fill" style="width:${mapProgress}%"></div></div>
         </article>
-      `).join("")}
+        <article>
+          <span class="small">Next unlock</span>
+          <strong>${escapeHTML(nextLocked?.title || "Journey review")}</strong>
+          <p>${escapeHTML(nextLocked ? nextLocked.label : "Archive, compare growth, then begin a new journey when ready.")}</p>
+        </article>
+      </div>
+      <div class="island-map">
+        ${locations.map((location, index) => `
+          <article class="island-location ${location.status} ${location.type}" style="--i:${index}">
+            <div class="location-orb">${location.status === "complete" ? "✓" : index + 1}</div>
+            <div>
+              <div class="location-kicker">
+                <span class="small">${escapeHTML(location.label)}</span>
+                <span class="location-status">${location.status === "current" ? "You are here" : location.status}</span>
+              </div>
+              <h3>${escapeHTML(location.title)}</h3>
+              <p>${escapeHTML(location.subtitle)}</p>
+            </div>
+          </article>
+        `).join("")}
+      </div>
     </section>
   `;
 }
