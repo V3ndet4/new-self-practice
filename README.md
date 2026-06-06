@@ -2,7 +2,7 @@
 
 A private, local-first companion for practicing the four-week process in *Breaking the Habit of Being Yourself*.
 
-Current release: `v1.2`
+Current release: `v1.3`
 
 ## Product rules
 
@@ -21,6 +21,7 @@ Current release: `v1.2`
 - The v1.0 Island Journey UI replaces the dashboard/sidebar layout with a map-first practice world and sticky compass navigation.
 - The v1.1 Personal Journey Map shows the current island location, current practice point, completed path, and next unlock.
 - The v1.2 Daily Practice Cards turn the daily session into guided Notice, Declare, Practice, and Act cards instead of a long form.
+- The v1.3 Quick State Shift exercise gives the front page a fast reset for intrusive images, fear loops, and returning to a chosen reality.
 
 The app uses original companion exercises and page references. It does not reproduce the book's long-form text or guided scripts.
 

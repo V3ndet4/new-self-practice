@@ -72,6 +72,17 @@ try {
   await send("Page.navigate", { url: "http://127.0.0.1:4174/" });
   await wait(800);
   assert(await evaluate("document.querySelector('h1')?.textContent") === "Begin at the shore. Walk toward the new self.", "Start screen did not render.");
+  assert((await evaluate("document.body.textContent")).includes("Quick State Shift"), "Front-page State Shift exercise did not render.");
+  await evaluate(`(() => {
+    const form = document.querySelector("#stateShiftForm");
+    form.elements.stateShiftTriggerChoice.value = "Partner betrayal image";
+    form.elements.stateShiftRealityChoice.value = "Evidence Only: Images are not evidence.";
+    form.elements.stateShiftMoveChoice.value = "Take three slow breaths with feet on the floor";
+    form.elements.stateShiftIntensity.value = "7";
+    form.requestSubmit();
+  })()`);
+  await wait(120);
+  assert(await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).stateShifts.length") === 1, "Front-page State Shift reset was not preserved.");
 
   await evaluate(`(() => {
     const values = {
@@ -181,10 +192,20 @@ try {
     document.querySelector("#dailyPracticeForm").requestSubmit();
   })()`);
   await wait(100);
+  assert((await evaluate("document.querySelector('.toast')?.textContent")).includes("Complete the meditation"), "Daily completion was not blocked before meditation.");
+  assert((await evaluate("document.body.textContent")).includes("Quick State Shift"), "Today State Shift exercise did not render.");
+  await evaluate(`(() => {
+    const form = document.querySelector("#stateShiftForm");
+    form.elements.stateShiftTriggerChoice.value = "Urge to check or ask reassurance";
+    form.elements.stateShiftRealityChoice.value = "Trust Reality: I am safe enough to wait for facts.";
+    form.elements.stateShiftMoveChoice.value = "Write one sentence: this is an image, not evidence";
+    form.requestSubmit();
+  })()`);
+  await wait(120);
+  assert(await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).stateShifts.length") === 2, "Today State Shift reset was not preserved.");
   assert(await evaluate("document.querySelectorAll('.practice-card').length") === 4, "Daily Practice Cards did not render.");
   assert((await evaluate("document.body.textContent")).includes("Notice · old pattern signal"), "Notice card did not render.");
   assert((await evaluate("document.body.textContent")).includes("Practice · meditation rep"), "Practice card did not render.");
-  assert((await evaluate("document.querySelector('.toast')?.textContent")).includes("Complete the meditation"), "Daily completion was not blocked before meditation.");
 
   for (let day = 1; day <= 7; day += 1) {
     await evaluate(`(() => {
@@ -228,6 +249,9 @@ try {
   const afterRepeat = await evaluate("JSON.parse(localStorage.getItem('new-self-practice-state-v1')).activeJourney");
   assert(afterRepeat.currentCycle === 2, "Repeat did not start a new cycle.");
   assert(afterRepeat.records.length === 7 && afterRepeat.reviews.length === 1, "Repeat erased preserved entries.");
+  await evaluate(`[...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "journal").click()`);
+  await wait(100);
+  assert((await evaluate("document.body.textContent")).includes("State Shift resets"), "State Shift resets did not appear in Archive.");
 
   await evaluate(`(() => {
     [...document.querySelectorAll("[data-view]")].find((item) => item.dataset.view === "settings").click();

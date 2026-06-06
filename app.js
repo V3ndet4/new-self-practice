@@ -1,6 +1,6 @@
 "use strict";
 
-const APP_VERSION = "v1.2";
+const APP_VERSION = "v1.3";
 const STORAGE_KEY = "new-self-practice-state-v1";
 const DECLARATION_PREFIX = "Universal consciousness with me and all around me, I have been";
 const DECLARATION_SUFFIX = "and I truly want to change that from this limited state of being.";
@@ -277,6 +277,7 @@ const DEFAULT_STATE = {
   archives: [],
   journal: [],
   patternLab: [],
+  stateShifts: [],
   settings: {
     duration: 15,
     spokenGuidance: true,
@@ -306,7 +307,8 @@ function loadState() {
       settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
       archives: Array.isArray(parsed.archives) ? parsed.archives : [],
       journal: Array.isArray(parsed.journal) ? parsed.journal : [],
-      patternLab: Array.isArray(parsed.patternLab) ? parsed.patternLab : []
+      patternLab: Array.isArray(parsed.patternLab) ? parsed.patternLab : [],
+      stateShifts: Array.isArray(parsed.stateShifts) ? parsed.stateShifts : []
     };
     if (loaded.activeJourney) {
       loaded.activeJourney.foundationRecords = Array.isArray(loaded.activeJourney.foundationRecords) ? loaded.activeJourney.foundationRecords : [];
@@ -402,7 +404,7 @@ function getAllFoundationRecords() {
 
 function calculateStreak() {
   const dates = [...getAllJourneyRecords(), ...getAllFoundationRecords()]
-    .concat(state.patternLab || [])
+    .concat(state.patternLab || [], state.stateShifts || [])
     .map((record) => String(record.completedAt || record.createdAt || "").slice(0, 10))
     .filter(Boolean);
   const unique = new Set(dates);
@@ -426,7 +428,8 @@ function getMomentum() {
     + foundations.filter((record) => record.actionContract?.proof).length;
   const followThrough = [...records, ...foundations].filter((record) => ["completed", "minimum"].includes(record.actionFollowUp?.outcome)).length;
   const labSessions = state.patternLab.length;
-  const points = foundations.length * 20 + records.length * 50 + evidence * 20 + actionProofs * 10 + followThrough * 25 + labSessions * 30;
+  const stateShiftCount = (state.stateShifts || []).length;
+  const points = foundations.length * 20 + records.length * 50 + evidence * 20 + actionProofs * 10 + followThrough * 25 + labSessions * 30 + stateShiftCount * 10;
   const earned = MOMENTUM_MILESTONES.filter((milestone) => points >= milestone.points);
   const next = MOMENTUM_MILESTONES.find((milestone) => points < milestone.points) || null;
   return { points, streak: calculateStreak(), evidence, actionProofs, followThrough, labSessions, earned, next };
@@ -620,6 +623,79 @@ function guidedChoice(name, label, placeholder) {
   `;
 }
 
+function renderStateShiftExercise() {
+  const journey = state.activeJourney;
+  const latest = (state.stateShifts || [])[0];
+  const declarationTarget = journey?.primaryPattern || "fear images and intrusive thoughts";
+  const triggerOptions = [
+    "Partner betrayal image",
+    "Replaying a fear scene",
+    "Urge to check or ask reassurance",
+    "Body panic without facts",
+    "Jealousy spike"
+  ];
+  const realityOptions = [
+    "Trust Reality: I am safe enough to wait for facts.",
+    "Chosen Man: I stay grounded, respectful, and emotionally disciplined.",
+    "Loved and Secure: I can feel loved without controlling the outcome.",
+    "Evidence Only: Images are not evidence.",
+    "Protect Connection: My next move protects love, not fear."
+  ];
+  const moveOptions = [
+    "Take three slow breaths with feet on the floor",
+    "Walk for two minutes before responding",
+    "Drink water and relax jaw, shoulders, and hands",
+    "Write one sentence: this is an image, not evidence",
+    "Send one normal loving message without fishing for reassurance"
+  ];
+
+  return `
+    <section class="state-shift-card" id="state-shift">
+      <div class="state-shift-copy">
+        <p class="eyebrow">Quick State Shift · intrusive image reset</p>
+        <h2>Do not complete the fear movie.</h2>
+        <p>Use this when a painful image or suspicion appears without real evidence. The point is to change your state before you check, accuse, replay, or withdraw.</p>
+        <div class="declaration compact"><p>${DECLARATION_PREFIX} <strong>${escapeHTML(declarationTarget)}</strong>, ${DECLARATION_SUFFIX}</p></div>
+        ${latest ? `<p class="small">Last reset: ${escapeHTML(latest.reality)} · ${escapeHTML(formatDate(latest.completedAt))}</p>` : `<p class="small">This can be used anytime, even before the full daily practice.</p>`}
+      </div>
+      <form id="stateShiftForm" class="state-shift-form">
+        <div class="field">
+          <label for="stateShiftTriggerChoice">What hit you?</label>
+          <select id="stateShiftTriggerChoice" name="stateShiftTriggerChoice" required>
+            <option value="">Choose the loop</option>
+            ${triggerOptions.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}
+            <option value="custom">Write my own</option>
+          </select>
+          <input name="stateShiftTriggerCustom" maxlength="180" placeholder="Or name the image/thought in your own words">
+        </div>
+        <div class="field">
+          <label for="stateShiftRealityChoice">Substitute reality</label>
+          <select id="stateShiftRealityChoice" name="stateShiftRealityChoice" required>
+            <option value="">Choose where to move attention</option>
+            ${realityOptions.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}
+            <option value="custom">Write my own</option>
+          </select>
+          <input name="stateShiftRealityCustom" maxlength="220" placeholder="Or write the future-state you want to enter">
+        </div>
+        <div class="field">
+          <label for="stateShiftMoveChoice">One grounded move</label>
+          <select id="stateShiftMoveChoice" name="stateShiftMoveChoice" required>
+            <option value="">Choose one action</option>
+            ${moveOptions.map((option) => `<option value="${escapeHTML(option)}">${escapeHTML(option)}</option>`).join("")}
+            <option value="custom">Write my own</option>
+          </select>
+          <input name="stateShiftMoveCustom" maxlength="220" placeholder="Or define one small action">
+        </div>
+        <div class="field intensity-field">
+          <label for="stateShiftIntensity">How loud is the image right now? <span id="stateShiftValue">5</span>/10</label>
+          <input id="stateShiftIntensity" name="stateShiftIntensity" type="range" min="1" max="10" value="5">
+        </div>
+        <button class="button gold" type="submit">Record reset and return to the chosen state</button>
+      </form>
+    </section>
+  `;
+}
+
 function renderStart() {
   const archiveMarkup = state.archives.length ? `
     <section class="panel">
@@ -640,7 +716,7 @@ function renderStart() {
   app.innerHTML = `
     <main class="main island-main island-start">
       <div class="page island-page">
-        <section class="hero island-landing">
+    <section class="hero island-landing">
           <p class="eyebrow">New Self Practice</p>
           <h1>Begin at the shore. Walk toward the new self.</h1>
           <p class="lead">An island-style practice journey for learning the foundations, changing one familiar pattern, and turning meditation into observable real-life action.</p>
@@ -652,6 +728,8 @@ function renderStart() {
             <span class="pill">Progress preserved</span>
           </div>
         </section>
+
+        ${renderStateShiftExercise()}
 
         <section class="panel" style="margin-top:18px;">
           <p class="eyebrow">Preparation</p>
@@ -731,6 +809,7 @@ function renderFoundation() {
 
     ${renderMomentumStrip()}
     ${renderActionFollowUp()}
+    ${renderStateShiftExercise()}
 
     <section class="practice-spark">
       <span class="small">Practice spark</span>
@@ -793,6 +872,7 @@ function renderToday() {
 
     ${renderMomentumStrip()}
     ${renderActionFollowUp()}
+    ${renderStateShiftExercise()}
 
     <section class="practice-spark">
       <span class="small">Practice spark</span>
@@ -1329,11 +1409,14 @@ function renderJournal() {
   const foundations = journeys.flatMap((journey) => (journey.foundationRecords || []).map((record) => ({ journey, record })))
     .sort((a, b) => new Date(b.record.completedAt) - new Date(a.record.completedAt));
   const labSessions = getLabSessions("", "").filter((session) => !query || JSON.stringify(session).toLowerCase().includes(query));
+  const stateShifts = (state.stateShifts || [])
+    .filter((entry) => !query || JSON.stringify(entry).toLowerCase().includes(query))
+    .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
   return `
     <header class="topbar">
       <div><p class="eyebrow">Preserved entries</p><h1>Return to what you noticed.</h1><p class="lead">Search declarations, triggers, reflections, and evidence across every cycle and completed journey.</p></div>
-      <div class="card stat"><span class="small">Preserved entries</span><strong>${entries.length + foundations.length + labSessions.length}</strong><span class="small">${foundations.length} foundations · ${labSessions.length} lab sessions</span></div>
+      <div class="card stat"><span class="small">Preserved entries</span><strong>${entries.length + foundations.length + labSessions.length + stateShifts.length}</strong><span class="small">${foundations.length} foundations · ${labSessions.length} lab sessions · ${stateShifts.length} state shifts</span></div>
     </header>
     <section class="panel">
       <form id="journalSearchForm" class="actions">
@@ -1342,9 +1425,14 @@ function renderJournal() {
         <button class="button secondary" type="button" data-action="clear-search">Clear</button>
       </form>
     </section>
+    ${renderStateShiftExercise()}
     <section class="panel">
       <h2>Pattern Lab sessions</h2>
       ${labSessions.length ? labSessions.map(renderLabSession).join("") : `<div class="empty">Pattern Lab sessions appear here after you review or rehearse a moment.</div>`}
+    </section>
+    <section class="panel">
+      <h2>State Shift resets</h2>
+      ${stateShifts.length ? stateShifts.map(renderStateShiftEntry).join("") : `<div class="empty">Quick State Shift resets appear here after you record them.</div>`}
     </section>
     <section class="panel">
       <h2>Foundation entries</h2>
@@ -1375,6 +1463,18 @@ function renderJournal() {
         </article>
       `).join("") : `<div class="empty">Weekly reviews appear after completing seven practice days.</div>`}
     </section>
+  `;
+}
+
+function renderStateShiftEntry(entry) {
+  return `
+    <article class="entry">
+      <div class="meta-row"><span class="pill">${escapeHTML(entry.journeyTitle)}</span>${entry.week ? `<span class="pill gold">Week ${entry.week} · Day ${entry.day}</span>` : `<span class="pill gold">Quick reset</span>`}<span class="small">${escapeHTML(formatDate(entry.completedAt))}</span></div>
+      <h3>${escapeHTML(entry.trigger)}</h3>
+      <p><strong>Substitute reality:</strong> ${escapeHTML(entry.reality)}</p>
+      <p><strong>Grounded move:</strong> ${escapeHTML(entry.move)}</p>
+      <p class="small">Image intensity: ${entry.intensity}/10</p>
+    </article>
   `;
 }
 
@@ -1653,6 +1753,36 @@ function resolveGuidedChoice(data, name) {
   if (custom) return custom;
   if (!choice || choice === "custom") throw new Error(`Choose or write an answer for ${name.replace(/([A-Z])/g, " $1").toLowerCase()}.`);
   return choice;
+}
+
+function resolveStateShiftChoice(data, name) {
+  const choice = String(data.get(`${name}Choice`) || "").trim();
+  const custom = String(data.get(`${name}Custom`) || "").trim();
+  if (custom) return custom;
+  if (!choice || choice === "custom") throw new Error("Choose an option or write your own state shift answer.");
+  return choice;
+}
+
+function handleStateShift(form) {
+  const data = new FormData(form);
+  const journey = state.activeJourney;
+  const entry = {
+    id: createId(),
+    journeyId: journey?.id || "",
+    journeyTitle: journey?.title || "Before active journey",
+    week: journey?.currentWeek || 0,
+    cycle: journey?.currentCycle || 0,
+    day: journey?.currentDay || 0,
+    trigger: resolveStateShiftChoice(data, "stateShiftTrigger"),
+    reality: resolveStateShiftChoice(data, "stateShiftReality"),
+    move: resolveStateShiftChoice(data, "stateShiftMove"),
+    intensity: Number(data.get("stateShiftIntensity") || 5),
+    completedAt: new Date().toISOString()
+  };
+  state.stateShifts = [entry, ...(state.stateShifts || [])].slice(0, 200);
+  saveState();
+  render();
+  showToast("State shift recorded. Return to facts, breath, and the chosen move.");
 }
 
 function handlePreparation(form) {
@@ -2040,7 +2170,8 @@ async function importEncryptedBackup(file, password) {
     ...structuredClone(DEFAULT_STATE),
     ...restored,
     settings: { ...DEFAULT_STATE.settings, ...(restored.settings || {}) },
-    patternLab: Array.isArray(restored.patternLab) ? restored.patternLab : []
+    patternLab: Array.isArray(restored.patternLab) ? restored.patternLab : [],
+    stateShifts: Array.isArray(restored.stateShifts) ? restored.stateShifts : []
   };
   saveState();
   resetPracticeSession();
@@ -2054,6 +2185,7 @@ app.addEventListener("submit", async (event) => {
   const form = event.target;
   try {
     if (form.id === "preparationForm") handlePreparation(form);
+    if (form.id === "stateShiftForm") handleStateShift(form);
     if (form.id === "foundationForm") handleFoundation(form);
     if (form.id === "actionFollowUpForm") handleActionFollowUp(form);
     if (form.id === "dailyPracticeForm") handleDailyPractice(form);
@@ -2144,6 +2276,9 @@ app.addEventListener("input", (event) => {
   }
   if (event.target.id === "intensityAfter") {
     document.getElementById("afterValue").textContent = event.target.value;
+  }
+  if (event.target.id === "stateShiftIntensity") {
+    document.getElementById("stateShiftValue").textContent = event.target.value;
   }
   if (/^(foundationAction|dailyAction)(Cue|Response|Minimum|Proof)$/.test(event.target.id)) {
     updateMissionPreview(event.target.id.startsWith("foundationAction") ? "foundationAction" : "dailyAction");
